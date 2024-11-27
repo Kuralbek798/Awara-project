@@ -105,6 +105,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hellpers\DataForLogs.cs" />
+    <Compile Include="InteresPlugin\AssignLeastLoadedUserPlugin.cs" />
     <Compile Include="InteresPlugin\CreatePossibleDealOnInterestApprovalPlugin.cs" />
     <Compile Include="InteresPlugin\IntetestPluginAssignmentOnCreation.cs" />
     <Compile Include="PluginExtensions\Attributes\Argument.cs" />

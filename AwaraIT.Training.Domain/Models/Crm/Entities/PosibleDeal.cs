@@ -33,7 +33,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             Open = 797_720_000,
             InWork = 797_720_001,
             Won = 797_720_002,
-
+           
         }
 
         public const string EntityLogicalName = "fnt_posible_deal";

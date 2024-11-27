@@ -12,6 +12,7 @@ using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
 using AwaraIT.Training.Domain.Extensions;
+using System.IdentityModel.Protocols.WSTrust;
 
 namespace AwaraIT.Training.Plugins.InteresPlugin
 {
@@ -32,21 +33,10 @@ namespace AwaraIT.Training.Plugins.InteresPlugin
         {
             _log = new Logger(wrapper.Service);
 
-            Interest preImage = wrapper.Context?.PreEntityImages["image"].ToEntity<Interest>();
-            Interest postImage = wrapper.Context?.PostEntityImages["image"].ToEntity<Interest>();
-
-
-
-            // Получение PreImage и PostImage
-
-
-            if (preImage == null && postImage == null)
-            {
-                _log.ERROR("PreImage and PostImage objects are Null");
-                return;
-            }
-
-            var interest = postImage ?? preImage;
+                  
+            var interest = wrapper.PreImage.ToEntity<Interest>();
+            var target = wrapper.TargetEntity.ToEntity<Interest>();
+          
 
             if (interest == null)
             {
@@ -54,11 +44,15 @@ namespace AwaraIT.Training.Plugins.InteresPlugin
                 return;
             }
 
+            _log.INFO($"Status: postImage: {interest?.StatusToEnum.ToString()}, /*interest.Status.ToString(), interest.Status?.Value */, {interest.StatusToEnum.ToIntValue()}");         
+            _log.INFO($"Status: target: {target?.StatusToEnum.ToString()}, /*target.Status.ToString(), target.Status?.Value,*/ {target.StatusToEnum.ToIntValue()}");      
+                    
+
             try
             {
                 if (interest.LogicalName == Interest.EntityLogicalName)
                 {
-                    if (interest.StatusEnum == InterestStepStatus.Agreement)
+                    if (target.StatusToEnum == InterestStepStatus.Agreement)
                     {
                         var contactReference = interest.ContactReference;
                         var territoryReference = interest.TerritoryReference;

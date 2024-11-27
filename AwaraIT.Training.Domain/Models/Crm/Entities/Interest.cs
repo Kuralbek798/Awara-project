@@ -55,7 +55,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
         public OptionSetValue Status
         {
-            get { return GetAttributeValue<OptionSetValue>(Metadata.Status); }
+           private get { return GetAttributeValue<OptionSetValue>(Metadata.Status); }
             set { Attributes[Metadata.Status] = value; }
         }
         public string Phone
@@ -79,7 +79,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             set { Attributes[Metadata.LastName] = value; }
         }
 
-        public InterestStepStatus StatusEnum => (InterestStepStatus)Status?.Value;
+        public InterestStepStatus StatusToEnum => (InterestStepStatus)Status?.Value;
 /*        public EntityReference InterestOwnerId // Поле для ownerid
         {
             get { return GetAttributeValue<EntityReference>(Metadata.OwnerId); }
