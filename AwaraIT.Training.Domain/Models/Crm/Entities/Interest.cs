@@ -55,7 +55,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
         public OptionSetValue Status
         {
-           private get { return GetAttributeValue<OptionSetValue>(Metadata.Status); }
+            get { return GetAttributeValue<OptionSetValue>(Metadata.Status); }
             set { Attributes[Metadata.Status] = value; }
         }
         public string Phone
