@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.IdentityModel.Protocols.WSTrust;
 
-namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
+namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
     public class CreatePossibleDealOnInterestApprovalPlugin : PluginBase
     {
@@ -36,15 +36,18 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                   
             var interest = wrapper.PreImage.ToEntity<Interest>();
             var target = wrapper.TargetEntity.ToEntity<Interest>();
-          
 
-            if (interest == null)
+
+            if (interest == null || target == null)
             {
-                _log.ERROR("Interest object is Null");
+                _log.ERROR("Interest or Target object is Null");
                 return;
             }
 
-            _log.INFO($"Status: postImage: {interest?.StatusToEnum.ToString()}, /*interest.Status.ToString(), interest.Status?.Value */, {interest.StatusToEnum.ToIntValue()}");         
+            _log.INFO($"Status: target: {target?.StatusToEnum.ToString() ?? "null"}");
+
+
+            //_log.INFO($"Status: postImage: {interest?.StatusToEnum.ToString()}, /*interest.Status.ToString(), interest.Status?.Value */, {interest.StatusToEnum.ToIntValue()}");         
             _log.INFO($"Status: target: {target?.StatusToEnum.ToString()}, /*target.Status.ToString(), target.Status?.Value,*/ {target.StatusToEnum.ToIntValue()}");      
                     
 
@@ -76,11 +79,11 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         }
 
                         // Создание новой записи в сущности "Возможная сделка"
-                        var possibleDealEntity = new Entity(PosibleDeal.EntityLogicalName)
+                        var possibleDealEntity = new Entity(PossibleDeal.EntityLogicalName)
                         {
-                            [PosibleDeal.Metadata.ContactReference] = contactReference,
-                            [PosibleDeal.Metadata.Status] = new OptionSetValue(PosibleDealStatusEnums.Open.ToIntValue()),
-                            [PosibleDeal.Metadata.TerritoryReference] = territoryReference
+                            [PossibleDeal.Metadata.ContactReference] = contactReference,
+                            [PossibleDeal.Metadata.Status] = new OptionSetValue(PossibleDealStatusEnums.Open.ToIntValue()),
+                            [PossibleDeal.Metadata.TerritoryReference] = territoryReference
                         };
 
                         var dealId = wrapper.Service.Create(possibleDealEntity);

@@ -6,12 +6,27 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{3BD7EB03-BFAF-47B4-900E-576E9564809E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>AwaraIT.Training.ConsoleApp</RootNamespace>
-    <AssemblyName>AwaraIT.Training.ConsoleApp</AssemblyName>
+    <RootNamespace>AwaraIT.Kuralbek.Plugins</RootNamespace>
+    <AssemblyName>AwaraIT.Kuralbek.Plugins</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -112,6 +127,7 @@
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Workflow.Activities" />
     <Reference Include="System.Workflow.ComponentModel" />
@@ -129,6 +145,7 @@
     <Compile Include="Actions\FetchExpressionEx.cs" />
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
     <Compile Include="Actions\MetadataCheck.cs" />
+    <Compile Include="Actions\ProductBasketPriceCalculationPlugin.cs" />
     <Compile Include="Actions\TestAction.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="Program.cs" />
@@ -139,7 +156,18 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
   <Import Project="..\AwaraIT.Training.Domain\AwaraIT.Training.Domain.projitems" Label="Shared" />
   <Import Project="..\AwaraIT.Training.Infrastucture\AwaraIT.Training.Infrastucture.projitems" Label="Shared" />
   <Import Project="..\AwaraIT.Training.Application\AwaraIT.Training.Application.projitems" Label="Shared" />

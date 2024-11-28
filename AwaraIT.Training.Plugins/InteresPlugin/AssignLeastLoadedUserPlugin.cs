@@ -9,108 +9,129 @@ using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
 using AwaraIT.Training.Domain.Extensions;
+using System.Collections.Generic;
+using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 
-namespace AwaraIT.Training.Plugins.InteresPlugin
+namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
-    public class AssignLeastLoadedUserPlugin : PluginBase
+    public class PossibleDealLessBusyUserAssignmentPlugin : PluginBase
     {
+        private readonly string _teamName = "fnt_Менеджеры по продажам";
         private Logger _log;
 
-        public AssignLeastLoadedUserPlugin()
+        public PossibleDealLessBusyUserAssignmentPlugin() : base()
         {
             Subscribe
                 .ToMessage(CrmMessage.Create)
                 .ForEntity(PosibleDeal.EntityLogicalName)
-                .When(PluginStage.PostOperation)
+                .When(PluginStage.PreOperation)
                 .Execute(Execute);
         }
 
-        public void Execute(IContextWrapper wrapper)
+        private void Execute(IContextWrapper context)
         {
-            _log = new Logger(wrapper.Service);
+            _log = new Logger(context.Service);
+            var posibleDeal = context?.TargetEntity.ToEntity<PosibleDeal>();
 
-            if (wrapper.TargetEntity == null || wrapper.TargetEntity.LogicalName != PosibleDeal.EntityLogicalName)
-                return;
-
-            var possibleDeal = wrapper.TargetEntity;
-
-            if (!possibleDeal.Attributes.Contains(PosibleDeal.Metadata.TerritoryReference))
-                return;
-
-            Guid territoryId = ((EntityReference)possibleDeal[PosibleDeal.Metadata.TerritoryReference]).Id;
-
-            // Находим всех пользователей, которые состоят в рабочей группе, связанной с территорией
-            QueryExpression query = new QueryExpression("systemuser")
+            try
             {
-                ColumnSet = new ColumnSet("systemuserid", "fullname"),
-                LinkEntities =
-                {
-                    new LinkEntity
-                    {
-                        LinkFromEntityName = "systemuser",
-                        LinkFromAttributeName = "systemuserid",
-                        LinkToEntityName = "teammembership",
-                        LinkToAttributeName = "systemuserid",
-                        LinkEntities =
-                        {
-                            new LinkEntity
+                // Получаем всех пользователей из рабочих групп, связанных с территорией
+                List<Entity> users = GetAvailableUsers(context.Service, posibleDeal);
+
+                // Определяем наименее загруженного пользователя
+               // Entity leastLoadedUser = FindLeastLoadedUser(service, users);
+
+                //if (leastLoadedUser != null)
+                //{
+                //    // Назначаем ответственного за сделку
+                //    possibleDeal["responsibleuser"] = leastLoadedUser.ToEntityReference();
+                //}
+            }
+            catch (Exception ex)
+            {
+
+                _log.ERROR(ex, "Error in AssignLeastBusyUser");
+                throw;
+            }
+
+        }
+
+
+        private List<Entity> GetAvailableUsers(IOrganizationService service, PosibleDeal posibleDeal)
+        {
+            var territoryId = posibleDeal.TerritoryReference.Id;
+
+
+
+            var query = new QueryExpression(WorkGroup.EntityLogicalName)
+            {
+                ColumnSet = new ColumnSet(/*WorkGroup.Metadata.TeamId*/ true),
+                Criteria = new FilterExpression
+                {    
+                    FilterOperator = LogicalOperator.And,
+                    Conditions =
                             {
-                                LinkFromEntityName = "teammembership",
-                                LinkFromAttributeName = "teamid",
-                                LinkToEntityName = "team",
-                                LinkToAttributeName = "teamid",
-                                LinkCriteria =
-                                {
-                                    Conditions =
-                                    {
-                                        new ConditionExpression("territoryid", ConditionOperator.Equal, territoryId)
-                                    }
-                                }
+                                new ConditionExpression("territory", ConditionOperator.Equal, territoryId)
                             }
-                        }
-                    }
                 }
             };
 
-            EntityCollection users = wrapper.Service.RetrieveMultiple(query);
+            /*    var workingGroupEntities = service.RetrieveMultiple(query).Entities;
+                HashSet<Guid> userIds = new HashSet<Guid>();
 
-            if (users.Entities.Count == 0)
-                return;
-
-            // Ищем самого ненагруженного пользователя
-            Entity leastLoadedUser = null;
-            int minLoad = int.MaxValue;
-
-            foreach (Entity user in users.Entities)
-            {
-                QueryExpression loadQuery = new QueryExpression(PosibleDeal.EntityLogicalName)
+                foreach (var group in workingGroupEntities)
                 {
-                    ColumnSet = new ColumnSet("posibledealid"),
-                    Criteria =
+                    var usersQuery = new QueryExpression("systemuser")
+                    {
+                        ColumnSet = new ColumnSet("systemuserid"),
+                        Criteria = new FilterExpression
+                        {
+                            Conditions =
+                                    {
+                                        new ConditionExpression("workinggroupid", ConditionOperator.Equal, group.Id)
+                                    }
+                        }
+                    };
+
+                    var userEntities = service.RetrieveMultiple(usersQuery).Entities;
+                    foreach (var user in userEntities)
+                    {
+                        userIds.Add(user.Id);
+                    }
+                }
+
+                return userIds.Select(id => service.Retrieve("systemuser", id, new ColumnSet("systemuserid"))).ToList();*/
+
+            return null;
+        }
+
+        /*private Entity FindLeastLoadedUser(IOrganizationService service, List<Entity> users)
+        {
+            Dictionary<Entity, int> userLoad = new Dictionary<Entity, int>();
+
+            foreach (var user in users)
+            {
+                var dealsQuery = new QueryExpression("possiblesdeal")
+                {
+                    ColumnSet = new ColumnSet("status"),
+                    Criteria = new FilterExpression
                     {
                         Conditions =
-                        {
-                            new ConditionExpression("ownerid", ConditionOperator.Equal, user.Id),
-                            new ConditionExpression("statuscode", ConditionOperator.Equal, PosibleDealStatusEnums.InWork.ToIntValue()) // "В работе"
-                        }
+                                {
+                                    new ConditionExpression("responsibleuser", ConditionOperator.Equal, user.Id),
+                                    new ConditionExpression("status", ConditionOperator.Equal, "В работе")
+                                }
                     }
                 };
 
-                int load = wrapper.Service.RetrieveMultiple(loadQuery).Entities.Count;
-
-                if (load < minLoad)
-                {
-                    minLoad = load;
-                    leastLoadedUser = user;
-                }
+                int inProgressCount = service.RetrieveMultiple(dealsQuery).Entities.Count;
+                userLoad[user] = inProgressCount;
             }
 
-            if (leastLoadedUser != null)
-            {
-                // Назначаем самого ненагруженного пользователя ответственным
-                possibleDeal["ownerid"] = new EntityReference("systemuser", leastLoadedUser.Id);
-                wrapper.Service.Update(possibleDeal);
-            }
-        }
+            return userLoad.OrderBy(ul => ul.Value).FirstOrDefault().Key;
+        }*/
+
+
     }
 }
+

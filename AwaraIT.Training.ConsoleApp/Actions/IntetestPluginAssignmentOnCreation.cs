@@ -20,7 +20,7 @@ using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 
 namespace AwaraIT.Training.ConsoleApp.Actions
 {
-	public static class TestAction
+	public static class IntetestPluginAssignmentOnCreation
 	{
       
         internal static void Run()
@@ -60,6 +60,11 @@ namespace AwaraIT.Training.ConsoleApp.Actions
 
 
         }
+
+
+
+
+
 
         private void Execute()
         {
