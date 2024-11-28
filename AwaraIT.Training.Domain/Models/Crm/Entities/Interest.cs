@@ -80,10 +80,10 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
 
         public InterestStepStatus StatusToEnum => (InterestStepStatus)Status?.Value;
-/*        public EntityReference InterestOwnerId // Поле для ownerid
+        public EntityReference InterestOwnerId 
         {
             get { return GetAttributeValue<EntityReference>(Metadata.OwnerId); }
             set { Attributes[Metadata.OwnerId] = value; }
-        }*/
+        }
     }
 }

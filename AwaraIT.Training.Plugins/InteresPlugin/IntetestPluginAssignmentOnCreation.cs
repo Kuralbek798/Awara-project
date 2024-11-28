@@ -39,34 +39,36 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
             {
                 var interest = wrapper.TargetEntity.ToEntity<Interest>();
 
-                /* if (interest != null && interest.Status != null)
-                 {
-                     if(interest.StatusToEnum == InterestStepStatus.New)
-                     {*/
-                var contact = FindOrCreateContact(wrapper, interest);
-
-                interest.ContactReference = contact.ToEntityReference();
-                _log.INFO($"{nameof(IntetestPluginAssignmentOnCreation)}, контакт назначен. Интерес ID: {interest.Id}, Контакт ID: {contact.Id}");
-
-                var responsibleUser = GetLeastLoadedUser(wrapper, interest.TerritoryReference.Id);
-                if(responsibleUser.Id == Guid.Empty)
+                if (interest != null && interest.Status != null)
                 {
+                    if (interest.StatusToEnum == InterestStepStatus.New)
+                    {
+                        var contact = FindOrCreateContact(wrapper, interest);
+
+                        interest.ContactReference = contact.ToEntityReference();
+                       // _log.INFO($"{nameof(IntetestPluginAssignmentOnCreation)}, контакт назначен. Интерес ID: {interest.Id}, Контакт ID: {contact.Id}");
+
+                        var responsibleUser = GetLeastLoadedUser(wrapper, interest.TerritoryReference.Id);
+                        if (responsibleUser.Id == Guid.Empty)
+                        {
+                            return;
+                        }
+
+                        interest.OwnerId = null;
+                       
+                        interest.OwnerId = responsibleUser.ToEntityReference();                        
+                     
+                        _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
+                        $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id} имя {interest.OwnerId.Name} логическое имя {interest.OwnerId.LogicalName}");
+                     
+                    }
 
                 }
-                interest.OwnerId = responsibleUser.ToEntityReference();
-
-                _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
-                 $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id}");
-                /*      }
-
-
-
-                  }*/
-                /* else
-                 {
-                     _log.ERROR($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)},interest Entity is null in targetEntity");
-                     throw new ArgumentNullException($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)}, interest Entity is null in targetEntity");
-                 }*/
+                else
+                {
+                    _log.ERROR($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)},interest Entity is null in targetEntity");
+                    throw new ArgumentNullException($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)}, interest Entity is null in targetEntity");
+                }
             }
             catch (Exception ex)
             {
@@ -113,7 +115,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                     };
 
                     contact.Id = wrapper.Service.Create(contact);
-                    _log.INFO($"Контакт создан и назначен к интересу {contact.Id}");
+                   // _log.INFO($"Контакт создан и назначен к интересу {contact.Id}");
                     return contact;
                 }
             }
@@ -129,88 +131,43 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
             try
             {
                 Guid teamId = GetTeamId(wrapper.Service, _teamName);
-                _log.INFO($"Получен ID команды: {teamId}");
+                //_log.INFO($"Получен ID команды: {teamId}");
 
                 var usersId = GetUserIdListInTeam(wrapper.Service, teamId);
-                _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
-
-
-
-
+                //    _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
 
                 var loadQuery = new QueryExpression(Interest.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet("ownerid"), // Мы только выбираем ownerid
+                    ColumnSet = new ColumnSet(EntityCommon.OwnerId),
                     Criteria = new FilterExpression
                     {
                         FilterOperator = LogicalOperator.And,
                         Conditions =
                         {
-                           new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                            new ConditionExpression(EntityCommon.StatusCode, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-                            new ConditionExpression(Interest.Metadata.TerritoryReference, ConditionOperator.Equal, territoryId)
+                            new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
+                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
+                            
                         }
-                    },
-                    Distinct = true // Убираем дубли
+                    },                
+
                 };
 
-                 // Получаем записи интересов
-                  var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;
+                // Получаем записи интересов
+                var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;//.Select(e => e.ToEntity<Interest>());
 
-                  // Подсчитываем интересы для каждого пользователя
-                  var userLoadCounts = interestRecords
-                    .GroupBy(record => record.GetAttributeValue<EntityReference>("ownerid").Id)
-                    .ToDictionary(g => g.Key, g => g.Count());
+                // Подсчитываем интересы для каждого пользователя
+                var userLoadCounts = interestRecords
+                  .GroupBy(rec => rec.ToEntity<Interest>().OwnerId.Id)
+                  .ToDictionary(g => g.Key, g => g.Count());
 
-                  // Теперь можно получить пользователя с наименьшей нагрузкой
-                  var leastLoadedUserId = userLoadCounts
-                    .OrderBy(entry => entry.Value)
-                    .FirstOrDefault().Key;
+                //Получаем пользователя с наименьшей нагрузкой
+                var leastLoadedUserId = userLoadCounts
+                  .OrderBy(entry => entry.Value)
+                  .FirstOrDefault().Key;               
 
-              
-                /*  if (leastLoadedUserId != Guid.Empty)
-                  {
-                    var leastLoadedUserReference = new EntityReference("systemuser", leastLoadedUserId);                    
-                  }
-*/
+              //  _log.INFO($"{_teamName} {DataForLogs.GetDataStringFromDictionary(userLoadCounts)}");
+                _log.INFO($"Less loaded user ID:{leastLoadedUserId}");
 
-
-
-
-
-
-
-
-                /* var loadQuery = new QueryExpression(Interest.EntityLogicalName)
-                 {
-                     ColumnSet = new ColumnSet(Interest.Metadata.InterestId, Interest.Metadata.OwnerId),
-                     Criteria = new FilterExpression
-                     {
-                         FilterOperator = LogicalOperator.And,
-                         Conditions =
-                         {
-                            new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                            new ConditionExpression(EntityCommon.StatusCode, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-                            new ConditionExpression(Interest.Metadata.TerritoryReference, ConditionOperator.Equal, territoryId)
-                         }
-                     }
-                 };
-                 var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;
-
-                 var userLoadCounts = usersId.ToDictionary(userId => userId, userId => 0);
-                 foreach (var record in interestRecords)
-                 {
-                     var userId = record.ToEntity<Interest>().OwnerId.Id;
-                     if (userLoadCounts.ContainsKey(userId))
-                     {
-                         userLoadCounts[userId]++;
-                     }
-                 }
-
-                 var leastLoadedUserId = userLoadCounts.OrderBy(entry => entry.Value).FirstOrDefault().Key;
-
-                 _log.INFO($"{_teamName} {DataForLogs.GetDataStringFromDictionary(userLoadCounts)}");
-                 _log.INFO($"Less loaded user ID:{leastLoadedUserId}");*/
                 return new Entity(User.EntityLogicalName, leastLoadedUserId);
             }
             catch (Exception ex)
@@ -265,7 +222,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 var guids = service.RetrieveMultiple(membershipQuery).Entities
                            .Select(m => m.ToEntity<Teammembership>().SystemUserId)
                            .ToList();
-                _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
+             //   _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
 
                 return guids;
             }
@@ -278,6 +235,6 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 
 
 
-       
+
     }
 }
