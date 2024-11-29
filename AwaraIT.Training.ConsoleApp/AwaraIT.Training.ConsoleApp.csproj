@@ -146,7 +146,7 @@
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
     <Compile Include="Actions\MetadataCheck.cs" />
     <Compile Include="Actions\ProductBasketPriceCalculationPlugin.cs" />
-    <Compile Include="Actions\TestAction.cs" />
+    <Compile Include="Actions\IntetestPluginAssignmentOnCreationTest.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

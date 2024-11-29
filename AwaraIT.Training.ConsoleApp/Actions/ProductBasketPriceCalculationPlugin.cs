@@ -56,43 +56,65 @@ namespace AwaraIT.Kuralbek.Plugins
         {
             _log = new Logger(_service);
 
-            //   GetTeamIdsByTerritory(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
-            // GetTeamIdsByTerritory(Guid.Parse("c294544e-80a6-ef11-8a6a-000d3a5c09a6"));
-            GetTerritoriesForTeam(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
-            // RetrieveTerritoryTeamData();
-            // GetTestUsersWithTerritory(_service);
+            GetTeamsByTerritory(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
+           // GetTestUsersWithTerritory(_service);
 
         }
 
 
-        private void RetrieveTerritoryTeamData()
+
+
+        private WorkGroup GetTeamsByTerritory(Guid territoryId)
         {
-            // Создаем запрос для получения данных из fnt_territory_team
-            var query = new QueryExpression("fnt_territory_team")
-            {
-                ColumnSet = new ColumnSet(true) // Получаем все колонки
-            };
+            var teamIds = new List<Guid>();
 
-            // Выполняем запрос
-            var entities = _service.RetrieveMultiple(query).Entities;
-
-            // Выводим данные на консоль
-            foreach (var entity in entities)
+            // Запрос для получения команд, связанных с заданной территорией
+            var teamQuery = new QueryExpression("team") // Сущность "team"
             {
-                Console.WriteLine("fnt_territory_team Record:");
-                foreach (var attribute in entity.Attributes)
+                ColumnSet = new ColumnSet("teamid", "name"), // Запрашиваем поля ID команды и имя команды
+                LinkEntities =
                 {
-                    Console.WriteLine($"{attribute.Key}: {attribute.Value}");
-                }
-                Console.WriteLine();
-            }
+                    // Создание связи с таблицей отношений fnt_territory_team
+                            new LinkEntity("team", "fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
+                            {
+                        LinkCriteria = new FilterExpression
+                        {
+                            Conditions =
+                            {
+                                // Фильтрация по ID территории
+                                new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
+                            }
+                        }
+                            }
+                 }
+                    };
+
+            // Выполняем запрос для получения команд
+            var teamEntitY = _service.RetrieveMultiple(teamQuery).Entities.ToList().Select(g => g.ToEntity<WorkGroup>()).FirstOrDefault();
+
+
+            Console.WriteLine($"{teamEntitY.Name.ToString()}, {teamEntitY.TeamId.ToString()}, {teamEntitY.LogicalName.ToString()}");
+            // Поскольку вы хотите получить сущности команд, просто вернем их
+            return teamEntitY;
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         private List<Entity> GetTestUsersWithTerritory(IOrganizationService service)
         {
             // Создаем запрос для сущности fnt_test_users
-            var query = new QueryExpression("fnt_test_users_fnt_territory")
+            var query = new QueryExpression("fnt_territory_team")
             {
                 ColumnSet = new ColumnSet(true)
             };
@@ -103,124 +125,9 @@ namespace AwaraIT.Kuralbek.Plugins
             return results; // Возвращаем список записей
         }
 
-        private List<Entity> GetTerritoriesForTeam(Guid teamId)
-        {
-            // Создаем запрос для связующей таблицы fnt_territory_team
-            var query = new QueryExpression("fnt_territory_team") // Имя связующей сущности
-            {
-                ColumnSet = new ColumnSet(true), // Выбираем только нужное поле
-                LinkEntities =
-                    {
-                       // Создаем связь с таблицей отношений
-                       new LinkEntity(WorkGroup.EntityLogicalName,"fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
-                       {
-                           LinkCriteria = new FilterExpression
-                           {
-                               Conditions =
-                               {
-                                   // Правильное условие фильтрации по ID территории
-                                   new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, teamId)
-                               }
-                           }
-                       }
-                    }
-            };
-
-            // Выполняем запрос и получаем связанные территории
-            var linkEntities = _service.RetrieveMultiple(query).Entities;
-
-            List<Entity> territories = new List<Entity>();
-            foreach (var linkEntity in linkEntities)
-            {
-                // Получаем идентификатор территории из связующей записи
-                var territoryId = linkEntity.GetAttributeValue<EntityReference>("fnt_territoryid")?.Id;
-
-                if (territoryId.HasValue)
-                {
-                    // Запрашиваем сущность territories для получения дополнительных данных о территории
-                    var territory = _service.Retrieve("territory", territoryId.Value, new ColumnSet(true));
-                    territories.Add(territory);
-                }
-            }
-
-            return territories;
-        }
+       
 
 
-
-
-        private List<Guid> GetTeamIdsByTerritory(Guid territoryId)
-        {
-            var teamIds = new List<Guid>();
-
-            // Запрос для получения рабочих групп, связанных с определенной территорией через таблицу отношений
-            QueryExpression teamQuery = new QueryExpression(WorkGroup.EntityLogicalName) // Сущность "Рабочая группа"
-            {
-                ColumnSet = new ColumnSet("teamid"), // Указываем, что хотим получить ID рабочих групп
-                LinkEntities =
-        {
-            // Создаем связь с таблицей отношений
-            new LinkEntity("fnt_territory_team", WorkGroup.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
-            {
-                LinkCriteria = new FilterExpression
-                {
-                    Conditions =
-                    {
-                        // Правильное условие фильтрации по ID территории
-                        new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
-                    }
-                }
-            }
-        }
-            };
-
-            // Выполняем запрос к рабочим группам
-            var teamEntities = _service.RetrieveMultiple(teamQuery).Entities;
-
-            // Извлекаем ID рабочих групп из результатов запроса
-            foreach (var entity in teamEntities)
-            {
-                // Добавляем ID рабочей группы в список
-                teamIds.Add(entity.Id);
-            }
-
-            // Возвращаем список ID рабочих групп, связанных с указанной территорией
-            return teamIds;
-        }
-
-
-
-
-
-
-        private List<Entity> GetProductBaskets(IOrganizationService service, Guid possibleDealId)
-        {
-            var query = new QueryExpression("productbasket")
-            {
-                ColumnSet = new ColumnSet("baseprice", "discount", "priceafterdiscount"),
-                Criteria = new FilterExpression
-                {
-                    Conditions =
-                    {
-                        new ConditionExpression("possibledealid", ConditionOperator.Equal, possibleDealId)
-                    }
-                }
-            };
-
-            return service.RetrieveMultiple(query).Entities.ToList();
-        }
-
-        private void UpdatePossibleDeal(IOrganizationService service, Guid possibleDealId, decimal basePriceSum, decimal discountSum, decimal priceAfterDiscountSum)
-        {
-            var possibleDeal = new Entity("possibledeal", possibleDealId)
-            {
-                ["baseprice"] = new Money(basePriceSum),
-                ["discount"] = new Money(discountSum),
-                ["priceafterdiscount"] = new Money(priceAfterDiscountSum)
-            };
-
-            service.Update(possibleDeal);
-        }
     }
 }
 
