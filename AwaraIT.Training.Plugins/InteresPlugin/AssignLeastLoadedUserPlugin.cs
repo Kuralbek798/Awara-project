@@ -11,6 +11,9 @@ using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.Collections.Generic;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
+using AwaraIT.Kuralbek.Plugins.Hellpers;
+using AwaraIT.Kuralbek.Plugins.Helpers;
+using AwaraIT.Training.Domain.Models.Crm;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -28,83 +31,78 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 .Execute(Execute);
         }
 
-        private void Execute(IContextWrapper context)
+        private void Execute(IContextWrapper wrapper)
         {
-            _log = new Logger(context.Service);
-            var posibleDeal = context?.TargetEntity.ToEntity<PosibleDeal>();
+            _log = new Logger(wrapper.Service);
 
             try
             {
+                var posibleDeal = wrapper?.TargetEntity.ToEntity<PosibleDeal>();
+                var territoryId = posibleDeal.TerritoryReference.Id;
                 // Получаем всех пользователей из рабочих групп, связанных с территорией
-                List<Entity> users = GetAvailableUsers(context.Service, posibleDeal);
+                List<Guid> usersIdList = GetUsersByTerritoryId(wrapper, territoryId);
 
-                // Определяем наименее загруженного пользователя
-               // Entity leastLoadedUser = FindLeastLoadedUser(service, users);
+                // Условия для поиска записей 
+                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PosibleDealStepStatus.InProgress.ToIntValue());
+                // Получаем наименее загруженного пользователя 
+                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PosibleDeal.EntityLogicalName);
 
-                //if (leastLoadedUser != null)
-                //{
-                //    // Назначаем ответственного за сделку
-                //    possibleDeal["responsibleuser"] = leastLoadedUser.ToEntityReference();
-                //}
+                if (responsibleUser.Id == Guid.Empty)
+                {
+                    return;
+                }
+
+                posibleDeal.OwnerId = responsibleUser.ToEntityReference();
             }
             catch (Exception ex)
             {
-
                 _log.ERROR(ex, "Error in AssignLeastBusyUser");
                 throw;
             }
-
         }
 
-
-        private List<Entity> GetAvailableUsers(IOrganizationService service, PosibleDeal posibleDeal)
+        private List<Guid> GetUsersByTerritoryId(IContextWrapper context, Guid territoryId)
         {
-            var territoryId = posibleDeal.TerritoryReference.Id;
-
-
-
-            var query = new QueryExpression(WorkGroup.EntityLogicalName)
+            try
             {
-                ColumnSet = new ColumnSet(/*WorkGroup.Metadata.TeamId*/ true),
-                Criteria = new FilterExpression
-                {    
-                    FilterOperator = LogicalOperator.And,
-                    Conditions =
-                            {
-                                new ConditionExpression("territo  ry", ConditionOperator.Equal, territoryId)
-                            }
-                }
-            };
-
-            var workingGroupEntities = service.RetrieveMultiple(query).Entities;
-            HashSet<Guid> userIds = new HashSet<Guid>();
-
-            foreach (var group in workingGroupEntities)
-            {
-                var usersQuery = new QueryExpression("systemuser")
+                // Запрос для полчения пользоввателей, связанных с территорией
+                var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet("systemuserid"),
-                    Criteria = new FilterExpression
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId),
+                    LinkEntities =
                     {
-                        Conditions =
+                        new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, User.Metadata.SystemUserId, Teammembership.Metadata.SystemUserId, JoinOperator.Inner)
+                        {
+                            LinkEntities =
+                            {
+                                new LinkEntity(Teammembership.EntityLogicalName, "fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
+                                {
+                                    LinkCriteria = new FilterExpression
                                     {
-                                        new ConditionExpression("workinggroupid", ConditionOperator.Equal, group.Id)
+                                        Conditions =
+                                        {
+                                            new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
+                                        }
                                     }
+                                }
+                            }
+                        }
                     }
                 };
 
-                var userEntities = service.RetrieveMultiple(usersQuery).Entities;
-                foreach (var user in userEntities)
-                {
-                    userIds.Add(user.Id);
-                }
+                // Execute the query and get the list of users
+                var userEntities = context.Service.RetrieveMultiple(userQuery).Entities;
+
+                var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
+
+                return userIds;
             }
-
-            return userIds.Select(id => service.Retrieve("systemuser", id, new ColumnSet("systemuserid"))).ToList();
-
-            return null;
+            catch (Exception ex)
+            {
+                _log.ERROR($"Error in method {nameof(GetUsersByTerritoryId)}: {ex.Message}, {ex}");
+                throw new Exception($"Error in {nameof(GetUsersByTerritoryId)}: {ex.Message}", ex);
+            }
         }
-              
     }
 }
 

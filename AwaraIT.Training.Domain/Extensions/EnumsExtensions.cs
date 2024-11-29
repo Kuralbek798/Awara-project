@@ -8,7 +8,7 @@ namespace AwaraIT.Training.Domain.Extensions
 {
     public static class EnumsExtensions
     {
-        public static int ToIntValue(this PosibleDealStatusEnums status)
+        public static int ToIntValue(this PosibleDealStepStatus status)
         {
             return (int)status;
         }

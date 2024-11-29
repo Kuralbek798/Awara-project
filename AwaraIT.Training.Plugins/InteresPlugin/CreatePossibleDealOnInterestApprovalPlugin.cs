@@ -33,20 +33,18 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         {
             _log = new Logger(wrapper.Service);
 
-                  
+
             var interest = wrapper.PreImage.ToEntity<Interest>();
             var target = wrapper.TargetEntity.ToEntity<Interest>();
-          
+
 
             if (interest == null)
             {
                 _log.ERROR("Interest object is Null");
                 return;
             }
-
-            _log.INFO($"Status: postImage: {interest?.StatusToEnum.ToString()}, /*interest.Status.ToString(), interest.Status?.Value */, {interest.StatusToEnum.ToIntValue()}");         
-            _log.INFO($"Status: target: {target?.StatusToEnum.ToString()}, /*target.Status.ToString(), target.Status?.Value,*/ {target.StatusToEnum.ToIntValue()}");      
-                    
+            //_log.INFO($"Status: postImage: {interest?.StatusToEnum.ToString()}, /*interest.Status.ToString(), interest.Status?.Value */, {interest.StatusToEnum.ToIntValue()}");
+            //_log.INFO($"Status: target: {target?.StatusToEnum.ToString()}, /*target.Status.ToString(), target.Status?.Value,*/ {target.StatusToEnum.ToIntValue()}");
 
             try
             {
@@ -79,7 +77,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         var possibleDealEntity = new Entity(PosibleDeal.EntityLogicalName)
                         {
                             [PosibleDeal.Metadata.ContactReference] = contactReference,
-                            [PosibleDeal.Metadata.Status] = new OptionSetValue(PosibleDealStatusEnums.Open.ToIntValue()),
+                            [PosibleDeal.Metadata.Status] = new OptionSetValue(PosibleDealStepStatus.Open.ToIntValue()),
                             [PosibleDeal.Metadata.TerritoryReference] = territoryReference
                         };
 

@@ -14,6 +14,7 @@ using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Kuralbek.Plugins.Hellpers;
 using System.ComponentModel.Design;
+using AwaraIT.Kuralbek.Plugins.Helpers;
 
 namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 {
@@ -44,23 +45,25 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                     if (interest.StatusToEnum == InterestStepStatus.New)
                     {
                         var contact = FindOrCreateContact(wrapper, interest);
-
                         interest.ContactReference = contact.ToEntityReference();
-                       // _log.INFO($"{nameof(IntetestPluginAssignmentOnCreation)}, контакт назначен. Интерес ID: {interest.Id}, Контакт ID: {contact.Id}");
 
-                        var responsibleUser = GetLeastLoadedUser(wrapper, interest.TerritoryReference.Id);
+                        var usersIdList = GetUserIdListByTeamName(wrapper.Service);
+                        _log.INFO($"Получены пользователи команды, количество: {usersIdList.Count}");
+
+                        // Условия для поиска записей 
+                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, InterestStepStatus.InProgress.ToIntValue(), InterestStepStatus.New.ToIntValue());
+                        // Получаем наименее загруженного пользователя для сущности Interest
+                        var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName);
+
                         if (responsibleUser.Id == Guid.Empty)
                         {
                             return;
                         }
 
-                        interest.OwnerId = null;
-                       
-                        interest.OwnerId = responsibleUser.ToEntityReference();                        
-                     
+                        interest.OwnerId = responsibleUser.ToEntityReference();
+
                         _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
                         $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id} имя {interest.OwnerId.Name} логическое имя {interest.OwnerId.LogicalName}");
-                     
                     }
 
                 }
@@ -73,7 +76,6 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
             catch (Exception ex)
             {
                 _log.ERROR($"Ошибка в {nameof(Execute)} {ex.Message}, {ex}");
-                Trace("InterestAssignmentPlugin обнаружила ошибку: {0}", ex.ToString());
                 throw new InvalidPluginExecutionException($"Ошибка в {nameof(Execute)}: {ex.Message}", ex);
             }
 
@@ -115,7 +117,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                     };
 
                     contact.Id = wrapper.Service.Create(contact);
-                 
+
                     return contact;
                 }
             }
@@ -126,62 +128,14 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
             }
         }
 
-        private Entity GetLeastLoadedUser(IContextWrapper wrapper, Guid territoryId)
-        {
-            try
-            {            
-                var usersId = GetUserIdListByTeamName(wrapper.Service);
-                    _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
-
-                var loadQuery = new QueryExpression(Interest.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(EntityCommon.OwnerId),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                        Conditions =
-                        {
-                            new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),                            
-                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.New.ToIntValue()),                            
-                        }
-                    },                
-
-                };
-
-                // Получаем записи интересов
-                var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;//.Select(e => e.ToEntity<Interest>());
-
-                // Подсчитываем интересы для каждого пользователя
-                var userLoadCounts = interestRecords
-                  .GroupBy(rec => rec.ToEntity<Interest>().OwnerId.Id)
-                  .ToDictionary(g => g.Key, g => g.Count());
-
-                //Получаем пользователя с наименьшей нагрузкой
-                var leastLoadedUserId = userLoadCounts
-                  .OrderBy(entry => entry.Value)
-                  .FirstOrDefault().Key;               
-
-              //  _log.INFO($"{_teamName} {DataForLogs.GetDataStringFromDictionary(userLoadCounts)}");
-                _log.INFO($"Less loaded user ID:{leastLoadedUserId}");
-
-                return new Entity(User.EntityLogicalName, leastLoadedUserId);
-            }
-            catch (Exception ex)
-            {
-                _log.ERROR($"Ошибка в {nameof(GetLeastLoadedUser)} {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
-            }
-        }
-
         private List<Guid> GetUserIdListByTeamName(IOrganizationService service)
         {
             try
             {
-                
+
                 var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), 
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId),
                     LinkEntities =
                     {
                        new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
@@ -216,6 +170,5 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
             }
         }
-
     }
 }

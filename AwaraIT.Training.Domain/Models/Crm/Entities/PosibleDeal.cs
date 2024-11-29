@@ -28,14 +28,16 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             public const string PriceAfterDiscountSum = "fnt_price_after_discount";
             public const string TerritoryReference = "fnt_territoryid";
         }
-        public enum PosibleDealStatusEnums
+
+
+        public enum PosibleDealStepStatus
         {
             Open = 797_720_000,
-            InWork = 797_720_001,
+            InProgress = 797_720_001,
             Won = 797_720_002,
-           
+
         }
-                                              
+
         public const string EntityLogicalName = "fnt_posible_deal";
 
         [DataMember]
@@ -85,9 +87,9 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             get { return GetAttributeValue<EntityReference>(Metadata.TerritoryReference); }
             set { Attributes[Metadata.TerritoryReference] = value; }
         }
-        public PosibleDealStatusEnums StatusEnum
+        public PosibleDealStepStatus StatusEnum
         {
-            get { return (PosibleDealStatusEnums)Status?.Value; }
+            get { return (PosibleDealStepStatus)Status?.Value; }
         }
     }
 }

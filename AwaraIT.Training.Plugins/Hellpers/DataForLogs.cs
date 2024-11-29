@@ -16,6 +16,7 @@ namespace AwaraIT.Kuralbek.Plugins.Hellpers
         public static string GetDataStringFromDictionary(Dictionary<Guid, int> data)
         {
           return string.Join(", ", data.Select(entry => $"key: {entry.Key} : value: {entry.Value}"));
-        }
+        }           
+
     }
 }
