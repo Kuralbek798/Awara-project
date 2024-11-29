@@ -1,4 +1,4 @@
-﻿namespace AwaraIT.Training.ConsoleApp
+﻿namespace AwaraIT.Kuralbek.Plugins
 {
     internal enum UtilityAction
     {

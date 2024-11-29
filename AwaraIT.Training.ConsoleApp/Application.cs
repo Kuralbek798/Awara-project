@@ -1,8 +1,8 @@
-﻿using AwaraIT.Training.ConsoleApp.Actions;
+﻿using AwaraIT.Kuralbek.Plugins.Actions;
 using System;
 using System.Configuration;
 
-namespace AwaraIT.Training.ConsoleApp
+namespace AwaraIT.Kuralbek.Plugins
 {
     internal static class Application
     {
@@ -32,6 +32,7 @@ namespace AwaraIT.Training.ConsoleApp
                     {
                         case UtilityAction.TestAction:
                             TestAction.Run();
+                           // ProductBasketPriceCalculationPlugin.Run();
                             break;
                     }
                 }

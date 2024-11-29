@@ -3,11 +3,11 @@ using Microsoft.Xrm.Sdk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AwaraIT.Training.ConsoleApp;
+using AwaraIT.Kuralbek.Plugins;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using AwaraIT.Training.Domain.Extensions;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
     internal class ActionEntityReferencedEx
     {

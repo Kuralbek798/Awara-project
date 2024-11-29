@@ -18,33 +18,33 @@ using System.Web.Services.Description;
 using System.Web.UI;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
-	public static class TestAction
-	{
-      
-        internal static void Run()
-		{
-			try
-			{
-				using(var client = Program.GetCrmClient())
-				{					
+    public static class TestAction
+    {
 
-					var clietntD365 = (IOrganizationService)client;
+        internal static void Run()
+        {
+            try
+            {
+                using (var client = Program.GetCrmClient())
+                {
+
+                    var clietntD365 = (IOrganizationService)client;
 
                     var tsPl = new TestPluginInterestContact2(clietntD365);
 
-    
+
 
                 }
             }
-			catch (Exception e)
-			{
-				Console.WriteLine($"Exception: {e}");
-				
-			}
-		}
-	}
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception: {e}");
+
+            }
+        }
+    }
 
     internal class TestPluginInterestContact2
     {
@@ -103,7 +103,7 @@ namespace AwaraIT.Training.ConsoleApp.Actions
 
                         interest.OwnerId = responsibleUser.ToEntityReference();
 
-                       // var sdf = _service.Create(interest);
+                        // var sdf = _service.Create(interest);
 
                         _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
                          $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id}");
@@ -118,8 +118,8 @@ namespace AwaraIT.Training.ConsoleApp.Actions
             }
             catch (Exception ex)
             {
-               /* _log.ERROR($"Ошибка в {nameof(Execute)} {ex.Message}, {ex}");
-                Trace("InterestAssignmentPlugin обнаружила ошибку: {0}", ex.ToString());*/
+                /* _log.ERROR($"Ошибка в {nameof(Execute)} {ex.Message}, {ex}");
+                 Trace("InterestAssignmentPlugin обнаружила ошибку: {0}", ex.ToString());*/
                 throw new InvalidPluginExecutionException($"Ошибка в {nameof(Execute)}: {ex.Message}", ex);
             }
 
@@ -180,11 +180,14 @@ namespace AwaraIT.Training.ConsoleApp.Actions
                 _log.INFO($"Получен ID команды: {teamId}");
 
                 var usersId = GetUserIdListInTeam(_service, teamId);
+
+                var usersIdstr = GetUserIdListByTeamName(_service, _teamName);
+
                 _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
 
                 var loadQuery = new QueryExpression("fnt_interest")
                 {
-                   // ColumnSet = new ColumnSet(true /*Interest.Metadata.OwnerId*/),
+                    // ColumnSet = new ColumnSet(true /*Interest.Metadata.OwnerId*/),
 
                     ColumnSet = new ColumnSet(Interest.Metadata.InterestId, Interest.Metadata.OwnerId),
                     Criteria = new FilterExpression
@@ -227,7 +230,7 @@ namespace AwaraIT.Training.ConsoleApp.Actions
                   .OrderBy(entry => entry.Value)
                   .FirstOrDefault().Key;
 
-                             
+
 
                 return new Entity(User.EntityLogicalName, leastLoadedUserId);
             }
@@ -237,6 +240,62 @@ namespace AwaraIT.Training.ConsoleApp.Actions
                 throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
             }
         }
+
+
+
+        private List<Guid> GetUserIdListByTeamName(IOrganizationService service, string teamName)
+        {
+            try
+            {
+                // Query to get users associated with the team using LinkEntity
+                var userQuery = new QueryExpression(User.EntityLogicalName)
+                {
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Field we want to retrieve
+                    LinkEntities =
+                    {
+                       new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
+                       {
+                             LinkEntities =
+                             {
+                                   new LinkEntity(Teammembership.EntityLogicalName, WorkGroup.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
+                                   {
+                                       LinkCriteria = new FilterExpression
+                                       {
+                                              Conditions =
+                                              {
+                                                new ConditionExpression(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName)
+                                               }
+                                        }
+                                   }
+                             }
+                       }
+                    }
+                };
+
+                // Execute the query and get the list of users
+                var userEntities = service.RetrieveMultiple(userQuery).Entities;
+
+                var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
+
+                return userIds;
+            }
+            catch (Exception ex)
+            {
+                _log.ERROR($"Ошибка в методе {nameof(GetUserIdListByTeamName)}: {ex.Message},  {ex}");
+                throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
+            }
+        }
+
+
+
+
+        /// <summary>
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="teamName"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private Guid GetTeamId(IOrganizationService service, string teamName)
         {
             try
@@ -283,7 +342,7 @@ namespace AwaraIT.Training.ConsoleApp.Actions
                 var guids = service.RetrieveMultiple(membershipQuery).Entities
                            .Select(m => m.ToEntity<Teammembership>().SystemUserId)
                            .ToList();
-               // _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
+                // _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
 
                 return guids;
             }
@@ -298,210 +357,210 @@ namespace AwaraIT.Training.ConsoleApp.Actions
 
 
 
-/*
-        public void Execute()
-        {
-             _logger = new Logger(_service);
-
-            try
-            {
-                var interest = new Interest
+        /*
+                public void Execute()
                 {
-                    Status = new OptionSetValue((int)Interest.InterestStepStatus.New),
-                    FirstName = "John",
-                    LastName = "Doe",
-                    MiddleName = "Smith",
-                    Phone = "1234567890",
-                    Email = "test@example.com",
-                    TerritoryReference = new EntityReference("fnt_territory", Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"))
-                };
-                var email = interest.Email;
-                var phone = interest.Phone;
-                var teritoryId = interest.TerritoryReference.Id;
-                // поиск или создание контакта
-                var contact = FindOrCreateContact(_service, email, phone, interest);
+                     _logger = new Logger(_service);
 
-                // Присвоение контакта
-                interest.ContactReference = contact.ToEntityReference();
-                _logger.INFO($"InterestAssignmentPlugin: Contact assigned - " +
-                            $"Interest [LogicalName: , ID:]; " +
-                            $"Contact [LogicalName: {contact.LogicalName}, ID: {contact.Id}]");
-
-                // Получение пользователя с наименьшей нагрузкой
-                var responsibleUser = GetLeastLoadedUser(_service, teritoryId);
-                if (responsibleUser.Id == Guid.Empty)
-                {
-                    return;
-                }
-                interest.OwnerId = responsibleUser.ToEntityReference();
-                _service.Create(interest);
-                _logger.INFO($"InterestAssignmentPlugin: Interest owner assigned - " +
-                      $"Interest ID: {interest.Id}, Owner ID: {interest.OwnerId.Id}");           
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message, ex);
-                _logger.ERROR("CreateInterestPlugin", ex.ToString(), "interest", Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
-            }
-        }
-
-        private Entity FindOrCreateContact(IOrganizationService service, string email, string phone, Interest interest)
-        {
-            try
-            {
-                // Поиск контакта по email и телефону
-                var query = new QueryExpression(Contact.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(true)
-                };
-                //поиск идет по email и телефону поэтому RetrieveMultiple так как Retrieve работает только по одному ID
-                query.Criteria.AddCondition(Contact.Metadata.Email, ConditionOperator.Equal, email);
-                query.Criteria.AddCondition(Contact.Metadata.Phone, ConditionOperator.Equal, phone);
-
-                var contacts = service.RetrieveMultiple(query).Entities;
-                if (contacts.Any())
-                {
-                    var contact = contacts.First();
-                    _logger.INFO($"Contact assigned to interest {contact.Id}");
-                    return contact;
-                }
-                else
-                {
-                    //Создание нового контакта
-                    var contact = new Contact
+                    try
                     {
-                        Email = email,
-                        Id = Guid.NewGuid(),
-                        FirstName = interest.FirstName,
-                        MiddleName = interest.MiddleName,
-                        Phone = phone,
-                        TerritoryReference = interest.TerritoryReference,
-                        LastName = interest.LastName,
-
-                    };
-                    contact.Id = service.Create(contact);
-                    _logger.INFO($"Contact created and assigned to interest {contact.Id}");
-                    return contact;
-                }
-            }
-            catch (Exception ex)
-            {
-
-                _logger.ERROR($"method {nameof(FindOrCreateContact)} {ex.ToString()}, contactEntityLogicalName: {Contact.EntityLogicalName}, interestId: {interest.Id}");
-
-                throw new Exception($"method {nameof(FindOrCreateContact)}" + ex.Message, ex);
-            }
-        }
-
-        private Entity GetLeastLoadedUser(IOrganizationService service, Guid territoryId)
-        {
-            try
-            {
-                Guid teamId = GetTeamId(service, _teamName);              
-
-                var usersId = GetUserIdListInTeam(service, teamId);              
-
-                var loadQuery = new QueryExpression(Interest.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(EntityCommon.OwnerId),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                        Conditions =
+                        var interest = new Interest
                         {
-                           new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                            new ConditionExpression(EntityCommon.StatusCode, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-                           // new ConditionExpression(Interest.Metadata.TerritoryReference, ConditionOperator.Equal, territoryId)
+                            Status = new OptionSetValue((int)Interest.InterestStepStatus.New),
+                            FirstName = "John",
+                            LastName = "Doe",
+                            MiddleName = "Smith",
+                            Phone = "1234567890",
+                            Email = "test@example.com",
+                            TerritoryReference = new EntityReference("fnt_territory", Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"))
+                        };
+                        var email = interest.Email;
+                        var phone = interest.Phone;
+                        var teritoryId = interest.TerritoryReference.Id;
+                        // поиск или создание контакта
+                        var contact = FindOrCreateContact(_service, email, phone, interest);
+
+                        // Присвоение контакта
+                        interest.ContactReference = contact.ToEntityReference();
+                        _logger.INFO($"InterestAssignmentPlugin: Contact assigned - " +
+                                    $"Interest [LogicalName: , ID:]; " +
+                                    $"Contact [LogicalName: {contact.LogicalName}, ID: {contact.Id}]");
+
+                        // Получение пользователя с наименьшей нагрузкой
+                        var responsibleUser = GetLeastLoadedUser(_service, teritoryId);
+                        if (responsibleUser.Id == Guid.Empty)
+                        {
+                            return;
                         }
-                    },
-                    //Distinct = true
-                };
-
-                // Получаем записи интересов
-                var interestRecords = service.RetrieveMultiple(loadQuery).Entities;
-
-                // Подсчитываем интересы для каждого пользователя
-                var userLoadCounts = interestRecords
-                  .GroupBy(record => record.GetAttributeValue<EntityReference>(EntityCommon.OwnerId).Id)
-                  .ToDictionary(g => g.Key, g => g.Count());
-
-                //Получаем пользователя с наименьшей нагрузкой
-                var leastLoadedUserId = userLoadCounts
-                  .OrderBy(entry => entry.Value)
-                  .FirstOrDefault().Key;
-                                
-
-                return new Entity(User.EntityLogicalName, leastLoadedUserId);
-            }
-            catch (Exception ex)
-            {
-                
-                throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
-            }
-        }
-
-        private Guid GetTeamId(IOrganizationService service, string teamName)
-        {
-            try
-            {
-                // Создаем запрос для получения команды по имени
-                var teamQuery = new QueryExpression(WorkGroup.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(WorkGroup.Metadata.TeamId)
-                };
-                teamQuery.Criteria.AddCondition(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName);
-
-                var team = service.RetrieveMultiple(teamQuery).Entities
-                    .Select(t => t.ToEntity<WorkGroup>())
-                    .FirstOrDefault();
-                if (team == null)
-                {
-                    _logger.ERROR($"method {nameof(GetTeamId)} team is null, teameName: {teamName}");
-                    throw new ArgumentNullException($"method {nameof(GetTeamId)} team is null, teameName: {teamName}");
+                        interest.OwnerId = responsibleUser.ToEntityReference();
+                        _service.Create(interest);
+                        _logger.INFO($"InterestAssignmentPlugin: Interest owner assigned - " +
+                              $"Interest ID: {interest.Id}, Owner ID: {interest.OwnerId.Id}");           
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message, ex);
+                        _logger.ERROR("CreateInterestPlugin", ex.ToString(), "interest", Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
+                    }
                 }
 
-                return team.TeamId;
-            }
-            catch (Exception ex)
-            {
-                _logger.ERROR($"method {nameof(GetTeamId)} {ex.ToString()}, WorkGroup.EntityLogicalName: {WorkGroup.EntityLogicalName},  teameName: {teamName}");
-
-                throw new Exception($"method {nameof(GetTeamId)}" + ex.Message, ex);
-            }
-        }
-
-        private List<Guid> GetUserIdListInTeam(IOrganizationService service, Guid teamId)
-        {
-            try
-            {
-                // Создаем запрос для получения всех пользователей, входящих в команду
-                var membershipQuery = new QueryExpression(Teammembership.EntityLogicalName)
+                private Entity FindOrCreateContact(IOrganizationService service, string email, string phone, Interest interest)
                 {
-                    ColumnSet = new ColumnSet(Teammembership.Metadata.SystemUserId),
-                    Criteria = new FilterExpression
+                    try
                     {
-                        Conditions =
+                        // Поиск контакта по email и телефону
+                        var query = new QueryExpression(Contact.EntityLogicalName)
+                        {
+                            ColumnSet = new ColumnSet(true)
+                        };
+                        //поиск идет по email и телефону поэтому RetrieveMultiple так как Retrieve работает только по одному ID
+                        query.Criteria.AddCondition(Contact.Metadata.Email, ConditionOperator.Equal, email);
+                        query.Criteria.AddCondition(Contact.Metadata.Phone, ConditionOperator.Equal, phone);
+
+                        var contacts = service.RetrieveMultiple(query).Entities;
+                        if (contacts.Any())
+                        {
+                            var contact = contacts.First();
+                            _logger.INFO($"Contact assigned to interest {contact.Id}");
+                            return contact;
+                        }
+                        else
+                        {
+                            //Создание нового контакта
+                            var contact = new Contact
+                            {
+                                Email = email,
+                                Id = Guid.NewGuid(),
+                                FirstName = interest.FirstName,
+                                MiddleName = interest.MiddleName,
+                                Phone = phone,
+                                TerritoryReference = interest.TerritoryReference,
+                                LastName = interest.LastName,
+
+                            };
+                            contact.Id = service.Create(contact);
+                            _logger.INFO($"Contact created and assigned to interest {contact.Id}");
+                            return contact;
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        new ConditionExpression(Teammembership.Metadata.TeamId, ConditionOperator.Equal, teamId) // Условия для фильтрации по ID команды
-                    }
-                    }
-                };
 
-                // Выполняем запрос к членству команды
-                var memberships = service.RetrieveMultiple(membershipQuery).Entities
-                    .Select(m => m.ToEntity<Teammembership>().SystemUserId)
-                    .ToList();
-                memberships.ForEach(e => Console.WriteLine(e));
-                // Извлекаем и возвращаем список идентификаторов пользователей
-                return memberships;
-            }
-            catch (Exception ex)
-            {
-                _logger.ERROR($"method {nameof(GetUserIdListInTeam)} {ex.ToString()}, Teammembership.EntityLogicalName: {Teammembership.EntityLogicalName},  teamId: {teamId}");
+                        _logger.ERROR($"method {nameof(FindOrCreateContact)} {ex.ToString()}, contactEntityLogicalName: {Contact.EntityLogicalName}, interestId: {interest.Id}");
 
-                throw new Exception($"method {nameof(GetUserIdListInTeam)}" + ex.Message, ex);
-            }
-        }*/
+                        throw new Exception($"method {nameof(FindOrCreateContact)}" + ex.Message, ex);
+                    }
+                }
+
+                private Entity GetLeastLoadedUser(IOrganizationService service, Guid territoryId)
+                {
+                    try
+                    {
+                        Guid teamId = GetTeamId(service, _teamName);              
+
+                        var usersId = GetUserIdListInTeam(service, teamId);              
+
+                        var loadQuery = new QueryExpression(Interest.EntityLogicalName)
+                        {
+                            ColumnSet = new ColumnSet(EntityCommon.OwnerId),
+                            Criteria = new FilterExpression
+                            {
+                                FilterOperator = LogicalOperator.And,
+                                Conditions =
+                                {
+                                   new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
+                                    new ConditionExpression(EntityCommon.StatusCode, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
+                                   // new ConditionExpression(Interest.Metadata.TerritoryReference, ConditionOperator.Equal, territoryId)
+                                }
+                            },
+                            //Distinct = true
+                        };
+
+                        // Получаем записи интересов
+                        var interestRecords = service.RetrieveMultiple(loadQuery).Entities;
+
+                        // Подсчитываем интересы для каждого пользователя
+                        var userLoadCounts = interestRecords
+                          .GroupBy(record => record.GetAttributeValue<EntityReference>(EntityCommon.OwnerId).Id)
+                          .ToDictionary(g => g.Key, g => g.Count());
+
+                        //Получаем пользователя с наименьшей нагрузкой
+                        var leastLoadedUserId = userLoadCounts
+                          .OrderBy(entry => entry.Value)
+                          .FirstOrDefault().Key;
+
+
+                        return new Entity(User.EntityLogicalName, leastLoadedUserId);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
+                    }
+                }
+
+                private Guid GetTeamId(IOrganizationService service, string teamName)
+                {
+                    try
+                    {
+                        // Создаем запрос для получения команды по имени
+                        var teamQuery = new QueryExpression(WorkGroup.EntityLogicalName)
+                        {
+                            ColumnSet = new ColumnSet(WorkGroup.Metadata.TeamId)
+                        };
+                        teamQuery.Criteria.AddCondition(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName);
+
+                        var team = service.RetrieveMultiple(teamQuery).Entities
+                            .Select(t => t.ToEntity<WorkGroup>())
+                            .FirstOrDefault();
+                        if (team == null)
+                        {
+                            _logger.ERROR($"method {nameof(GetTeamId)} team is null, teameName: {teamName}");
+                            throw new ArgumentNullException($"method {nameof(GetTeamId)} team is null, teameName: {teamName}");
+                        }
+
+                        return team.TeamId;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.ERROR($"method {nameof(GetTeamId)} {ex.ToString()}, WorkGroup.EntityLogicalName: {WorkGroup.EntityLogicalName},  teameName: {teamName}");
+
+                        throw new Exception($"method {nameof(GetTeamId)}" + ex.Message, ex);
+                    }
+                }
+
+                private List<Guid> GetUserIdListInTeam(IOrganizationService service, Guid teamId)
+                {
+                    try
+                    {
+                        // Создаем запрос для получения всех пользователей, входящих в команду
+                        var membershipQuery = new QueryExpression(Teammembership.EntityLogicalName)
+                        {
+                            ColumnSet = new ColumnSet(Teammembership.Metadata.SystemUserId),
+                            Criteria = new FilterExpression
+                            {
+                                Conditions =
+                            {
+                                new ConditionExpression(Teammembership.Metadata.TeamId, ConditionOperator.Equal, teamId) // Условия для фильтрации по ID команды
+                            }
+                            }
+                        };
+
+                        // Выполняем запрос к членству команды
+                        var memberships = service.RetrieveMultiple(membershipQuery).Entities
+                            .Select(m => m.ToEntity<Teammembership>().SystemUserId)
+                            .ToList();
+                        memberships.ForEach(e => Console.WriteLine(e));
+                        // Извлекаем и возвращаем список идентификаторов пользователей
+                        return memberships;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.ERROR($"method {nameof(GetUserIdListInTeam)} {ex.ToString()}, Teammembership.EntityLogicalName: {Teammembership.EntityLogicalName},  teamId: {teamId}");
+
+                        throw new Exception($"method {nameof(GetUserIdListInTeam)}" + ex.Message, ex);
+                    }
+                }*/
     }
 }
 

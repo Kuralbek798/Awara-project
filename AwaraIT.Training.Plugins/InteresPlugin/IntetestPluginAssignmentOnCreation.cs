@@ -130,11 +130,14 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         {
             try
             {
-                Guid teamId = GetTeamId(wrapper.Service, _teamName);
+                //  Guid teamId = GetTeamId(wrapper.Service, _teamName);
                 //_log.INFO($"Получен ID команды: {teamId}");
 
-                var usersId = GetUserIdListInTeam(wrapper.Service, teamId);
-                //    _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
+                //  var usersId = GetUserIdListInTeam(wrapper.Service, teamId);
+
+
+                var usersId = GetUserIdListByTeamName(wrapper.Service);
+                    _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
 
                 var loadQuery = new QueryExpression(Interest.EntityLogicalName)
                 {
@@ -176,62 +179,111 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
             }
         }
-        private Guid GetTeamId(IOrganizationService service, string teamName)
+
+
+
+
+        private List<Guid> GetUserIdListByTeamName(IOrganizationService service)
         {
             try
             {
-                var teamQuery = new QueryExpression(WorkGroup.EntityLogicalName)
+                
+                var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet(WorkGroup.Metadata.TeamId)
-                };
-                teamQuery.Criteria.AddCondition(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName);
-
-                var team = service.RetrieveMultiple(teamQuery).Entities
-                    .Select(t => t.ToEntity<WorkGroup>())
-                    .FirstOrDefault();
-                if (team == null)
-                {
-                    _log.ERROR($"Ошибка в {nameof(GetTeamId)}: команда не найдена, teamName: {teamName}");
-                    throw new ArgumentNullException($"Ошибка в {nameof(GetTeamId)}: команда не найдена, teamName: {teamName}");
-                }
-
-                return team.TeamId;
-            }
-            catch (Exception ex)
-            {
-                _log.ERROR($"Ошибка в методе {nameof(GetTeamId)}: {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(GetTeamId)}: {ex.Message}", ex);
-            }
-        }
-        private List<Guid> GetUserIdListInTeam(IOrganizationService service, Guid teamId)
-        {
-            try
-            {
-                var membershipQuery = new QueryExpression(Teammembership.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(Teammembership.Metadata.SystemUserId),
-                    Criteria = new FilterExpression
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), 
+                    LinkEntities =
                     {
-                        Conditions =
-                        {
-                            new ConditionExpression(Teammembership.Metadata.TeamId, ConditionOperator.Equal, teamId)
-                        }
+                       new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
+                       {
+                             LinkEntities =
+                             {
+                                   new LinkEntity(Teammembership.EntityLogicalName, WorkGroup.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
+                                   {
+                                       LinkCriteria = new FilterExpression
+                                       {
+                                              Conditions =
+                                              {
+                                                new ConditionExpression(WorkGroup.Metadata.Name, ConditionOperator.Equal, _teamName)
+                                               }
+                                        }
+                                   }
+                             }
+                       }
                     }
                 };
 
-                var guids = service.RetrieveMultiple(membershipQuery).Entities
-                           .Select(m => m.ToEntity<Teammembership>().SystemUserId)
-                           .ToList();
-             //   _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
+                // Execute the query and get the list of users
+                var userEntities = service.RetrieveMultiple(userQuery).Entities;
 
-                return guids;
+                var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
+
+                return userIds;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в методе {nameof(GetUserIdListInTeam)}: {ex.Message},  {ex}");
-                throw new Exception($"Ошибка в {nameof(GetUserIdListInTeam)}: {ex.Message}", ex);
+                _log.ERROR($"Ошибка в методе {nameof(GetUserIdListByTeamName)}: {ex.Message},  {ex}");
+                throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
             }
         }
+
+
+
+        /* private Guid GetTeamId(IOrganizationService service, string teamName)
+         {
+             try
+             {
+                 var teamQuery = new QueryExpression(WorkGroup.EntityLogicalName)
+                 {
+                     ColumnSet = new ColumnSet(WorkGroup.Metadata.TeamId)
+                 };
+                 teamQuery.Criteria.AddCondition(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName);
+
+                 var team = service.RetrieveMultiple(teamQuery).Entities
+                     .Select(t => t.ToEntity<WorkGroup>())
+                     .FirstOrDefault();
+                 if (team == null)
+                 {
+                     _log.ERROR($"Ошибка в {nameof(GetTeamId)}: команда не найдена, teamName: {teamName}");
+                     throw new ArgumentNullException($"Ошибка в {nameof(GetTeamId)}: команда не найдена, teamName: {teamName}");
+                 }
+
+                 return team.TeamId;
+             }
+             catch (Exception ex)
+             {
+                 _log.ERROR($"Ошибка в методе {nameof(GetTeamId)}: {ex.Message}, {ex}");
+                 throw new Exception($"Ошибка в {nameof(GetTeamId)}: {ex.Message}", ex);
+             }
+         }
+         private List<Guid> GetUserIdListInTeam(IOrganizationService service, Guid teamId)
+         {
+             try
+             {
+                 var membershipQuery = new QueryExpression(Teammembership.EntityLogicalName)
+                 {
+                     ColumnSet = new ColumnSet(Teammembership.Metadata.SystemUserId),
+                     Criteria = new FilterExpression
+                     {
+                         Conditions =
+                         {
+                             new ConditionExpression(Teammembership.Metadata.TeamId, ConditionOperator.Equal, teamId)
+                         }
+                     }
+                 };
+
+                 var guids = service.RetrieveMultiple(membershipQuery).Entities
+                            .Select(m => m.ToEntity<Teammembership>().SystemUserId)
+                            .ToList();
+              //   _log.INFO($"list usersId {DataForLogs.GetGuidsString(guids)}");
+
+                 return guids;
+             }
+             catch (Exception ex)
+             {
+                 _log.ERROR($"Ошибка в методе {nameof(GetUserIdListInTeam)}: {ex.Message},  {ex}");
+                 throw new Exception($"Ошибка в {nameof(GetUserIdListInTeam)}: {ex.Message}", ex);
+             }
+         }*/
 
 
 

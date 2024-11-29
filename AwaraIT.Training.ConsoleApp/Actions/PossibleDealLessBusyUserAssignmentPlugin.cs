@@ -11,7 +11,7 @@ using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
     public class PossibleDealLessBusyUserAssignmentPlugin
     {

@@ -12,7 +12,7 @@ using AwaraIT.Training.Domain.Models.Crm.Entities;
 using System.IdentityModel.Protocols.WSTrust;
 using System.Web.Services.Description;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
     internal class ActionRetrievMultipleEx
     {

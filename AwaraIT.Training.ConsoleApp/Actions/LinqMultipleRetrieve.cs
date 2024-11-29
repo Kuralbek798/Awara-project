@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
     internal class LinqMultipleRetrieve
     {

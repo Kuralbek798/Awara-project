@@ -14,6 +14,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
 
             public const string TerritoryName = "fnt_territory_name";
+            public const string TerritoryID = "fnt_territoryid";
 
         }
 
@@ -24,6 +25,11 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
             get { return GetAttributeValue<string>(Metadata.TerritoryName); }
             set { Attributes[Metadata.TerritoryName] = value; }
+        }
+         public string TerritoryID
+        {
+            get { return GetAttributeValue<string>(Metadata.TerritoryID); }
+            set { Attributes[Metadata.TerritoryID] = value; }
         }
 
     }

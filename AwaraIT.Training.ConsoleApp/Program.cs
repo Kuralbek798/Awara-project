@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xrm.Tooling.Connector;
 using System.Configuration;
 
-namespace AwaraIT.Training.ConsoleApp
+namespace AwaraIT.Kuralbek.Plugins
 {
     class Program
     {

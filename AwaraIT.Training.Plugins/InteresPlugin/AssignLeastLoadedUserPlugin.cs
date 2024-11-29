@@ -71,67 +71,40 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     FilterOperator = LogicalOperator.And,
                     Conditions =
                             {
-                                new ConditionExpression("territory", ConditionOperator.Equal, territoryId)
+                                new ConditionExpression("territo  ry", ConditionOperator.Equal, territoryId)
                             }
                 }
             };
 
-            /*    var workingGroupEntities = service.RetrieveMultiple(query).Entities;
-                HashSet<Guid> userIds = new HashSet<Guid>();
+            var workingGroupEntities = service.RetrieveMultiple(query).Entities;
+            HashSet<Guid> userIds = new HashSet<Guid>();
 
-                foreach (var group in workingGroupEntities)
-                {
-                    var usersQuery = new QueryExpression("systemuser")
-                    {
-                        ColumnSet = new ColumnSet("systemuserid"),
-                        Criteria = new FilterExpression
-                        {
-                            Conditions =
-                                    {
-                                        new ConditionExpression("workinggroupid", ConditionOperator.Equal, group.Id)
-                                    }
-                        }
-                    };
-
-                    var userEntities = service.RetrieveMultiple(usersQuery).Entities;
-                    foreach (var user in userEntities)
-                    {
-                        userIds.Add(user.Id);
-                    }
-                }
-
-                return userIds.Select(id => service.Retrieve("systemuser", id, new ColumnSet("systemuserid"))).ToList();*/
-
-            return null;
-        }
-
-        /*private Entity FindLeastLoadedUser(IOrganizationService service, List<Entity> users)
-        {
-            Dictionary<Entity, int> userLoad = new Dictionary<Entity, int>();
-
-            foreach (var user in users)
+            foreach (var group in workingGroupEntities)
             {
-                var dealsQuery = new QueryExpression("possiblesdeal")
+                var usersQuery = new QueryExpression("systemuser")
                 {
-                    ColumnSet = new ColumnSet("status"),
+                    ColumnSet = new ColumnSet("systemuserid"),
                     Criteria = new FilterExpression
                     {
                         Conditions =
-                                {
-                                    new ConditionExpression("responsibleuser", ConditionOperator.Equal, user.Id),
-                                    new ConditionExpression("status", ConditionOperator.Equal, "В работе")
-                                }
+                                    {
+                                        new ConditionExpression("workinggroupid", ConditionOperator.Equal, group.Id)
+                                    }
                     }
                 };
 
-                int inProgressCount = service.RetrieveMultiple(dealsQuery).Entities.Count;
-                userLoad[user] = inProgressCount;
+                var userEntities = service.RetrieveMultiple(usersQuery).Entities;
+                foreach (var user in userEntities)
+                {
+                    userIds.Add(user.Id);
+                }
             }
 
-            return userLoad.OrderBy(ul => ul.Value).FirstOrDefault().Key;
-        }*/
+            return userIds.Select(id => service.Retrieve("systemuser", id, new ColumnSet("systemuserid"))).ToList();
 
-
+            return null;
+        }
+              
     }
 }
 

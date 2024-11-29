@@ -18,7 +18,7 @@ using System.Web.Services.Description;
 using System.Web.UI;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 
-namespace AwaraIT.Training.ConsoleApp.Actions
+namespace AwaraIT.Kuralbek.Plugins.Actions
 {
 	public static class IntetestPluginAssignmentOnCreation
 	{
