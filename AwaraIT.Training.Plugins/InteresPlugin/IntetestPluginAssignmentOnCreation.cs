@@ -32,9 +32,13 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 .Execute(Execute);
         }
 
+        /// <summary>
+        /// Основной метод выполнения плагина, который назначает владельца интереса наименее загруженному пользователю.
+        /// </summary>
+        /// <param name="wrapper">Контекст выполнения плагина.</param>
+        /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения плагина.</exception>
         private void Execute(IContextWrapper wrapper)
         {
-
             _log = new Logger(wrapper.Service);
             try
             {
@@ -65,22 +69,27 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
                         $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id} имя {interest.OwnerId.Name} логическое имя {interest.OwnerId.LogicalName}");
                     }
-
                 }
                 else
                 {
-                    _log.ERROR($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)},interest Entity is null in targetEntity");
+                    _log.ERROR($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)}, interest Entity is null in targetEntity");
                     throw new ArgumentNullException($"Error ocurred in {nameof(IntetestPluginAssignmentOnCreation)}, interest Entity is null in targetEntity");
                 }
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в {nameof(Execute)} {ex.Message}, {ex}");
-                throw new InvalidPluginExecutionException($"Ошибка в {nameof(Execute)}: {ex.Message}", ex);
+                _log.ERROR($"Error in method {nameof(Execute)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(Execute)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
             }
-
         }
 
+        /// <summary>
+        /// Находит или создает контакт на основе предоставленной информации об интересе.
+        /// </summary>
+        /// <param name="wrapper">Контекст выполнения плагина.</param>
+        /// <param name="interest">Информация об интересе.</param>
+        /// <returns>Сущность контакта.</returns>
+        /// <exception cref="Exception">Выбрасывается при возникновении ошибки во время поиска или создания контакта.</exception>
         private Entity FindOrCreateContact(IContextWrapper wrapper, Interest interest)
         {
             try
@@ -123,52 +132,60 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в {nameof(FindOrCreateContact)} {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(FindOrCreateContact)}: {ex.Message}", ex);
+                _log.ERROR($"Error in method {nameof(FindOrCreateContact)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(FindOrCreateContact)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
             }
         }
 
+        /// <summary>
+        /// Получает список идентификаторов пользователей, которые принадлежат определенной команде.
+        /// </summary>
+        /// <param name="service">Экземпляр IOrganizationService, используемый для выполнения запроса.</param>
+        /// <returns>Список GUID, представляющих идентификаторы пользователей, которые принадлежат указанной команде.</returns>
+        /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
         private List<Guid> GetUserIdListByTeamName(IOrganizationService service)
         {
             try
             {
-
+                // Создаем запрос для получения пользователей, связанных с указанной командой
                 var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId),
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Указываем столбцы для получения
                     LinkEntities =
                     {
-                       new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
-                       {
-                             LinkEntities =
-                             {
-                                   new LinkEntity(Teammembership.EntityLogicalName, WorkGroup.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
-                                   {
-                                       LinkCriteria = new FilterExpression
-                                       {
-                                              Conditions =
-                                              {
-                                                new ConditionExpression(WorkGroup.Metadata.Name, ConditionOperator.Equal, _teamName)
-                                               }
+                        new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
+                        {
+                            LinkEntities =
+                            {
+                                new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, TeammembershipNN.Metadata.TeamId, Team.Metadata.TeamId, JoinOperator.Inner)
+                                {
+                                    LinkCriteria = new FilterExpression
+                                    {
+                                        Conditions =
+                                        {
+                                            new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName) // Фильтрация по имени команды
                                         }
-                                   }
-                             }
-                       }
+                                    }
+                                }
+                            }
+                        }
                     }
                 };
 
-                // Execute the query and get the list of users
+                // Выполняем запрос и получаем сущности пользователей
                 var userEntities = service.RetrieveMultiple(userQuery).Entities;
 
+                // Извлекаем идентификаторы пользователей из полученных сущностей
                 var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
 
                 return userIds;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в методе {nameof(GetUserIdListByTeamName)}: {ex.Message},  {ex}");
-                throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
+                _log.ERROR($"Error in method {nameof(GetUserIdListByTeamName)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUserIdListByTeamName)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
             }
         }
     }
 }
+

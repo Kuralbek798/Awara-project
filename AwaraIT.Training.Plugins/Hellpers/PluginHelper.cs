@@ -55,7 +55,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             catch (Exception ex)
             {
                 _log.ERROR($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}, {ex}");
-                throw new Exception($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}", ex);
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetLeastLoadedEntity)} method оf PluginHelper.", ex);
             }
         }
 

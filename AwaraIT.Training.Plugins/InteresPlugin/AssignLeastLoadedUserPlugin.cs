@@ -31,6 +31,11 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 .Execute(Execute);
         }
 
+        /// <summary>
+        /// Основной метод выполнения плагина, который назначает владельца возможной сделки наименее загруженному пользователю.
+        /// </summary>
+        /// <param name="wrapper">Контекст выполнения плагина.</param>
+        /// <exception cref="Exception">Выбрасывается при возникновении ошибки во время выполнения плагина.</exception>
         private void Execute(IContextWrapper wrapper)
         {
             _log = new Logger(wrapper.Service);
@@ -61,27 +66,36 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             }
         }
 
+        /// <summary>
+        /// Получает список идентификаторов пользователей, связанных с указанной территорией.
+        /// </summary>
+        /// <param name="context">Контекст выполнения плагина.</param>
+        /// <param name="territoryId">Идентификатор территории.</param>
+        /// <returns>Список GUID, представляющих идентификаторы пользователей, связанных с указанной территорией.</returns>
+        /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
         private List<Guid> GetUsersByTerritoryId(IContextWrapper context, Guid territoryId)
         {
             try
             {
-                // Запрос для полчения пользоввателей, связанных с территорией
+                // Запрос для получения пользователей, связанных с территорией
                 var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(User.Metadata.SystemUserId),
                     LinkEntities =
                     {
-                        new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, User.Metadata.SystemUserId, Teammembership.Metadata.SystemUserId, JoinOperator.Inner)
+                        new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
                         {
                             LinkEntities =
                             {
-                                new LinkEntity(Teammembership.EntityLogicalName, "fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
+                                new LinkEntity(TeammembershipNN.EntityLogicalName, TerritoryTeamNN.EntityLogicalName, TeammembershipNN.Metadata.TeamId, TerritoryTeamNN.Metadata.TeamId, JoinOperator.Inner)
                                 {
                                     LinkCriteria = new FilterExpression
                                     {
+                                        FilterOperator = LogicalOperator.And,
                                         Conditions =
                                         {
-                                            new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
+                                            new ConditionExpression(TerritoryTeamNN.Metadata.TerritoryId, ConditionOperator.Equal, territoryId),
+                                            new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName)
                                         }
                                     }
                                 }
@@ -90,7 +104,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     }
                 };
 
-                // Execute the query and get the list of users
+                // Выполняем запрос и получаем список пользователей
                 var userEntities = context.Service.RetrieveMultiple(userQuery).Entities;
 
                 var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
@@ -100,9 +114,13 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             catch (Exception ex)
             {
                 _log.ERROR($"Error in method {nameof(GetUsersByTerritoryId)}: {ex.Message}, {ex}");
-                throw new Exception($"Error in {nameof(GetUsersByTerritoryId)}: {ex.Message}", ex);
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUsersByTerritoryId)} method.", ex);
             }
+
+
+
         }
     }
 }
+
 

@@ -176,7 +176,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         {
             try
             {
-              
+
 
                 var usersId = GetUserIdListByTeamName(_service, _teamName);
 
@@ -194,10 +194,10 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                             {
                                 new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
                                 new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-                             
+
                             }
                     }
-                 
+
                 };
 
                 // Получаем записи интересов
@@ -209,10 +209,10 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 // Подсчитываем интересы для каждого пользователя
                 var userLoadCounts = interestRecords
                   .GroupBy(record => record.ToEntity<Interest>().OwnerId.Id);
-                  
 
-                  var conunt = userLoadCounts 
-                  .ToDictionary(g => g.Key, g => g.Count());
+
+                var conunt = userLoadCounts
+                .ToDictionary(g => g.Key, g => g.Count());
 
                 //Получаем пользователя с наименьшей нагрузкой
                 var leastLoadedUserId = conunt
@@ -242,17 +242,17 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                     ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Field we want to retrieve
                     LinkEntities =
                     {
-                       new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
+                       new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
                        {
                              LinkEntities =
                              {
-                                   new LinkEntity(Teammembership.EntityLogicalName, WorkGroup.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
+                                   new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
                                    {
                                        LinkCriteria = new FilterExpression
                                        {
                                               Conditions =
                                               {
-                                                new ConditionExpression(WorkGroup.Metadata.Name, ConditionOperator.Equal, teamName)
+                                                new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, teamName)
                                                }
                                         }
                                    }
@@ -274,8 +274,8 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
             }
         }
-              
-            
+
+
     }
 }
 

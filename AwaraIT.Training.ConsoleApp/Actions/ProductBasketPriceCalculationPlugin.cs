@@ -9,8 +9,9 @@ using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.Collections.Generic;
 using AwaraIT.Kuralbek.Plugins.Actions;
-using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
+
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
+using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 
 namespace AwaraIT.Kuralbek.Plugins
 
@@ -59,11 +60,7 @@ namespace AwaraIT.Kuralbek.Plugins
 
 
 
-            var interestConditions = new Dictionary<string, object>
-                         {
-                            { Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue() },
-                            { Interest.Metadata.Status, InterestStepStatus.New.ToIntValue() }
-                         };
+
 
             GetUsersByTerritoryId(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
 
@@ -80,7 +77,8 @@ namespace AwaraIT.Kuralbek.Plugins
         {
 
 
-
+            User user = new User();
+            user.SystemUserId = Guid.Empty;
 
             try
             {
@@ -90,17 +88,17 @@ namespace AwaraIT.Kuralbek.Plugins
                     ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Field we want to retrieve
                     LinkEntities =
                     {
-                        new LinkEntity(User.EntityLogicalName, Teammembership.EntityLogicalName, User.Metadata.SystemUserId, Teammembership.Metadata.SystemUserId, JoinOperator.Inner)
+                        new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
                         {
                             LinkEntities =
                             {
-                                new LinkEntity(Teammembership.EntityLogicalName, "fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
+                                new LinkEntity(TeammembershipNN.EntityLogicalName, TerritoryTeamNN.EntityLogicalName, TeammembershipNN.Metadata.TeamId, TerritoryTeamNN.Metadata.TeamId, JoinOperator.Inner)
                                 {
                                     LinkCriteria = new FilterExpression
                                     {
                                         Conditions =
                                         {
-                                            new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
+                                            new ConditionExpression(TerritoryTeamNN.Metadata.TerritoryId, ConditionOperator.Equal, territoryId)
                                         }
                                     }
                                 }
@@ -125,38 +123,6 @@ namespace AwaraIT.Kuralbek.Plugins
 
 
 
-        private WorkGroup GetTeamsByTerritory(Guid territoryId)
-        {
-            var teamIds = new List<Guid>();
-
-            // Запрос для получения команд, связанных с заданной территорией
-            var teamQuery = new QueryExpression(User.EntityLogicalName)
-            {
-                ColumnSet = new ColumnSet("teamid", "name"),
-                LinkEntities =
-                {
-                    new LinkEntity("team", "fnt_territory_team", "teamid", "teamid", JoinOperator.Inner)
-                    {
-                        LinkCriteria = new FilterExpression
-                        {
-                            Conditions =
-                            {
-                                // Фильтрация по ID территории
-                                new ConditionExpression("fnt_territoryid", ConditionOperator.Equal, territoryId)
-                            }
-                        }
-                    }
-                }
-            };
-
-            // Выполняем запрос для получения команд
-            var teamEntitY = _service.RetrieveMultiple(teamQuery).Entities.ToList().Select(g => g.ToEntity<WorkGroup>()).FirstOrDefault();
-
-
-            Console.WriteLine($"{teamEntitY.Name.ToString()}, {teamEntitY.TeamId.ToString()}, {teamEntitY.LogicalName.ToString()}");
-            // Поскольку вы хотите получить сущности команд, просто вернем их
-            return teamEntitY;
-        }
 
 
 
@@ -171,19 +137,7 @@ namespace AwaraIT.Kuralbek.Plugins
 
 
 
-        private List<Entity> GetTestUsersWithTerritory(IOrganizationService service)
-        {
-            // Создаем запрос для сущности fnt_test_users
-            var query = new QueryExpression("fnt_territory_team")
-            {
-                ColumnSet = new ColumnSet(true)
-            };
 
-            // Выполняем запрос и получаем результаты
-            var results = service.RetrieveMultiple(query).Entities.ToList();
-
-            return results; // Возвращаем список записей
-        }
 
 
 
