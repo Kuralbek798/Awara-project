@@ -16,6 +16,9 @@ using System.IdentityModel.Protocols.WSTrust;
 
 namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 {
+    /// <summary>
+    /// Плагин для создания записи "Возможная сделка" при изменении статуса интереса на "Согласование".
+    /// </summary>
     public class CreatePossibleDealOnInterestApprovalPlugin : PluginBase
     {
         private Logger _log;
@@ -98,4 +101,9 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         }
     }
 }
+
+
+
+
+
 

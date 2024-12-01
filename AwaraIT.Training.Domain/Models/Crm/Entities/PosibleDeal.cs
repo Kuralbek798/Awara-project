@@ -9,43 +9,102 @@ using System.Runtime.CompilerServices;
 
 namespace AwaraIT.Training.Domain.Models.Crm.Entities
 {
-
-
-
+    /// <summary>
+    /// Класс <c>PosibleDeal</c> представляет сущность возможной сделки в CRM.
+    /// </summary>
     [DataContract(Namespace = "AwaraIT.Training.Domain.Models.Crm.Entities")]
     [EntityLogicalName(EntityLogicalName)]
     public class PosibleDeal : BaseEntity
     {
+        /// <summary>
+        /// Инициализирует новый экземпляр класса <see cref="PosibleDeal"/>.
+        /// </summary>
         public PosibleDeal() : base(EntityLogicalName) { }
 
+        /// <summary>
+        /// Содержит метаданные для полей сущности <see cref="PosibleDeal"/>.
+        /// </summary>
         public static class Metadata
         {
-            public const string Id = "fnt_posible_dealid";
+            /// <summary>
+            /// Логическое имя: идентификатор возможной сделки.
+            /// </summary>
+            public const string PosibleDealId = "fnt_posible_dealid";
+
+            /// <summary>
+            /// Логическое имя: ссылка на контакт.
+            /// </summary>
             public const string ContactReference = "fnt_kontactid";
+
+            /// <summary>
+            /// Логическое имя: статус возможной сделки.
+            /// </summary>
             public const string Status = "fnt_status";
-            public const string BasePriceSum = "fnt_base_price_sum";
-            public const string DiscountSum = "fnt_discount_sum";
-            public const string PriceAfterDiscountSum = "fnt_price_after_discount";
+
+            /// <summary>
+            /// Логическое имя:  цена.
+            /// </summary>
+            public const string Price = "fnt_price";
+
+            /// <summary>
+            /// Логическое имя:  скидка.
+            /// </summary>
+            public const string Discount = "fnt_discount";
+
+            /// <summary>
+            /// Логическое имя:  цена после скидки.
+            /// </summary>
+            public const string PriceAfterDiscount = "fnt_price_after_discount";
+
+            /// <summary>
+            /// Логическое имя: ссылка на территорию.
+            /// </summary>
             public const string TerritoryReference = "fnt_territoryid";
         }
 
-
+        /// <summary>
+        /// Перечисление статусов возможной сделки.
+        /// </summary>
         public enum PosibleDealStepStatus
         {
+            /// <summary>
+            /// Открыта.
+            /// </summary>
             Open = 797_720_000,
-            InProgress = 797_720_001,
-            Won = 797_720_002,
 
+            /// <summary>
+            /// В работе.
+            /// </summary>
+            InProgress = 797_720_001,
+
+            /// <summary>
+            /// Выиграна.
+            /// </summary>
+            Won = 797_720_002,
         }
 
+        /// <summary>
+        /// Логическое имя: сущности "возможная сделка".
+        /// </summary>
         public const string EntityLogicalName = "fnt_posible_deal";
+        /// <summary>
+        /// Псевдоним объекта: сущности "возможная сделка".
+        /// </summary>
+        public const string EntityAlias = "fnt_possibleDeal";
 
+        /// <summary>
+        /// Свойство: Идентификатор возможной сделки.
+        /// </summary>
         [DataMember]
         public Guid PosibleDealId
         {
-            get { return GetAttributeValue<Guid>(Metadata.Id); }
-            set { Attributes[Metadata.Id] = value; }
+            get { return GetAttributeValue<Guid>(Metadata.PosibleDealId); }
+            set { Attributes[Metadata.PosibleDealId] = value; }
         }
+
+        /// <summary>
+        /// Свойство: Ссылка на контакт.
+        /// </summary>
         [DataMember]
         public EntityReference ContactReference
         {
@@ -53,6 +112,9 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             set { Attributes[Metadata.ContactReference] = value; }
         }
 
+        /// <summary>
+        /// Свойство: Статус возможной сделки.
+        /// </summary>
         [DataMember]
         public OptionSetValue Status
         {
@@ -60,36 +122,54 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             set { Attributes[Metadata.Status] = value; }
         }
 
+        /// <summary>
+        /// Свойство: цена.
+        /// </summary>
         [DataMember]
         public decimal BasePriceSum
         {
-            get { return GetAttributeValue<decimal>(Metadata.BasePriceSum); }
-            set { Attributes[Metadata.BasePriceSum] = value; }
+            get { return GetAttributeValue<decimal>(Metadata.Price); }
+            set { Attributes[Metadata.Price] = value; }
         }
 
+        /// <summary>
+        /// Свойство: скидка.
+        /// </summary>
         [DataMember]
         public decimal DiscountSum
         {
-            get { return GetAttributeValue<decimal>(Metadata.DiscountSum); }
-            set { Attributes[Metadata.DiscountSum] = value; }
+            get { return GetAttributeValue<decimal>(Metadata.Discount); }
+            set { Attributes[Metadata.Discount] = value; }
         }
 
+        /// <summary>
+        /// Свойство: Сумма цен после скидки.
+        /// </summary>
         [DataMember]
         public decimal PriceAfterDiscountSum
         {
-            get { return GetAttributeValue<decimal>(Metadata.PriceAfterDiscountSum); }
-            set { Attributes[Metadata.PriceAfterDiscountSum] = value; }
+            get { return GetAttributeValue<decimal>(Metadata.PriceAfterDiscount); }
+            set { Attributes[Metadata.PriceAfterDiscount] = value; }
         }
 
+        /// <summary>
+        /// Свойство: Ссылка на территорию.
+        /// </summary>
         [DataMember]
         public EntityReference TerritoryReference
         {
             get { return GetAttributeValue<EntityReference>(Metadata.TerritoryReference); }
             set { Attributes[Metadata.TerritoryReference] = value; }
         }
+
+        /// <summary>
+        /// Свойство: Статус возможной сделки в виде перечисления.
+        /// </summary>
         public PosibleDealStepStatus StatusEnum
         {
             get { return (PosibleDealStepStatus)Status?.Value; }
         }
     }
 }
+
+

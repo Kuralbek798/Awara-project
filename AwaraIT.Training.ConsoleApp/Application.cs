@@ -11,8 +11,9 @@ namespace AwaraIT.Kuralbek.Plugins
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            // IntetestPluginAssignmentOnCreationTest.Run();
-            ProductBasketPriceCalculationPlugin.Run();
+            //IntetestPluginAssignmentOnCreationTest.Run();
+            //ProductBasketPriceCalculationPlugin.Run();
+            PossibleDealLessBusyUserAssignmentPluginTest.Run();
 
             /*     try
                  {

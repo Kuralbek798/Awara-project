@@ -21,23 +21,23 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: Id - записи 
+            /// Логическое имя: ProductCartId - записи 
             /// в связующей таблице между территорией и командой
             /// </summary>
             public const string TerritoryTeamId = "fnt_territory_teamid";
             /// <summary>
-            /// Логическое имя: Id - Идентификатор территории
+            /// Логическое имя: ProductCartId - Идентификатор территории
             /// </summary>
             public const string TerritoryId = "fnt_territoryid";
 
             /// <summary>
-            /// Логическое имя: Id -  Идентификатор команды
+            /// Логическое имя: ProductCartId -  Идентификатор команды
             /// </summary>
             public const string TeamId = "teamid";
         }
 
         /// <summary>
-        /// Свойство: Id - записи 
+        /// Свойство: ProductCartId - записи 
         /// в связующей таблице между территорией и командой
         /// </summary>
         public Guid TerritoryTeamId
@@ -46,7 +46,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TerritoryTeamId] = value; }
         }
         /// <summary>
-        /// Свойство: Id - Идентификатор территории
+        /// Свойство: ProductCartId - Идентификатор территории
         /// </summary>
         public Guid TerritoryId
         {
@@ -54,7 +54,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TerritoryId] = value; }
         }
         /// <summary>
-        /// Свойство: Id -  Идентификатор команды.
+        /// Свойство: ProductCartId -  Идентификатор команды.
         /// </summary>
         public Guid TeamId
         {

@@ -48,6 +48,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper, Version=10.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoMapper.10.0.0\lib\net461\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -140,14 +143,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\Action.cs" />
     <Compile Include="Actions\ActionEntityReferencedEx.cs" />
     <Compile Include="Actions\ActionRetrievMultipleEx.cs" />
     <Compile Include="Actions\FetchExpressionEx.cs" />
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
     <Compile Include="Actions\MetadataCheck.cs" />
+    <Compile Include="Actions\PossibleDealLessBusyUserAssignmentPluginTest.cs" />
     <Compile Include="Actions\ProductBasketPriceCalculationPlugin.cs" />
     <Compile Include="Actions\IntetestPluginAssignmentOnCreationTest.cs" />
     <Compile Include="Application.cs" />
+    <Compile Include="Hellpers\DataForLogs.cs" />
+    <Compile Include="Hellpers\PluginHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UtilityActioncs.cs" />

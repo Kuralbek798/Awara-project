@@ -14,7 +14,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: Id - идентификатор пользователя.
+            /// Логическое имя: ProductCartId - идентификатор пользователя.
             /// </summary>
             public const string SystemUserId = "systemuserid";
 
@@ -25,7 +25,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public const string EntityLogicalName = "systemuser";
 
         /// <summary>
-        /// Свойство: Id - идентификатор пользователя.
+        /// Свойство: ProductCartId - идентификатор пользователя.
         /// </summary>
         public Guid SystemUserId
         {

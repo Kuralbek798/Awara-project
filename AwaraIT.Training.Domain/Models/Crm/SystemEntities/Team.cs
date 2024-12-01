@@ -13,7 +13,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: Id - идентификатор команды.
+            /// Логическое имя: ProductCartId - идентификатор команды.
             /// </summary>
             public const string TeamId = "teamid";
             /// <summary>

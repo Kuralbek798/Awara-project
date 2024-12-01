@@ -37,6 +37,9 @@
     <AssemblyOriginatorKeyFile>AwaraIT.Kuralbek.Plugins.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper, Version=10.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoMapper.10.0.0\lib\net461\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -106,8 +109,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Hellpers\DataForLogs.cs" />
+    <Compile Include="Hellpers\MappingProfile.cs" />
     <Compile Include="Hellpers\PluginHelper.cs" />
-    <Compile Include="InteresPlugin\AssignLeastLoadedUserPlugin.cs" />
+    <Compile Include="InteresPlugin\CalculateTotalPricesDiscountsPlugin.cs" />
+    <Compile Include="InteresPlugin\CalculatePrices.cs" />
+    <Compile Include="InteresPlugin\PossibleDealLessBusyUserAssignmentPlugin.cs" />
     <Compile Include="InteresPlugin\CreatePossibleDealOnInterestApprovalPlugin.cs" />
     <Compile Include="InteresPlugin\IntetestPluginAssignmentOnCreation.cs" />
     <Compile Include="PluginExtensions\Attributes\Argument.cs" />

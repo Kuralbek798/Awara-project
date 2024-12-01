@@ -17,9 +17,12 @@ using AwaraIT.Training.Domain.Models.Crm;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
+    /// <summary>
+    /// Плагин для назначения владельца возможной сделки наименее загруженному пользователю.
+    /// </summary>
     public class PossibleDealLessBusyUserAssignmentPlugin : PluginBase
     {
-        private readonly string _teamName = "fnt_Менеджеры по продажам";
+        private readonly string _teamName = "fnt_Менеджер по продажам Казахстан";
         private Logger _log;
 
         public PossibleDealLessBusyUserAssignmentPlugin() : base()
@@ -45,12 +48,13 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 var posibleDeal = wrapper?.TargetEntity.ToEntity<PosibleDeal>();
                 var territoryId = posibleDeal.TerritoryReference.Id;
                 // Получаем всех пользователей из рабочих групп, связанных с территорией
-                List<Guid> usersIdList = GetUsersByTerritoryId(wrapper, territoryId);
+                List<Guid> usersIdList = GetUsersByTerritoryId(wrapper.Service, territoryId);
 
                 // Условия для поиска записей 
-                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PosibleDealStepStatus.InProgress.ToIntValue());
+                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PosibleDeal.Metadata.Status, PosibleDealStepStatus.InProgress.ToIntValue());
                 // Получаем наименее загруженного пользователя 
-                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PosibleDeal.EntityLogicalName);
+                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PosibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
+
 
                 if (responsibleUser.Id == Guid.Empty)
                 {
@@ -73,7 +77,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// <param name="territoryId">Идентификатор территории.</param>
         /// <returns>Список GUID, представляющих идентификаторы пользователей, связанных с указанной территорией.</returns>
         /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
-        private List<Guid> GetUsersByTerritoryId(IContextWrapper context, Guid territoryId)
+        private List<Guid> GetUsersByTerritoryId(IOrganizationService context, Guid territoryId)
         {
             try
             {
@@ -95,7 +99,20 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                                         Conditions =
                                         {
                                             new ConditionExpression(TerritoryTeamNN.Metadata.TerritoryId, ConditionOperator.Equal, territoryId),
-                                            new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName)
+                                        }
+                                    },
+                                    LinkEntities =
+                                    {
+                                        new LinkEntity(Team.EntityLogicalName, Team.EntityLogicalName, Team.Metadata.TeamId, Team.Metadata.TeamId, JoinOperator.Inner)
+                                        {
+                                            LinkCriteria = new FilterExpression
+                                            {
+                                                FilterOperator = LogicalOperator.And,
+                                                Conditions =
+                                                {
+                                                    new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName)
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -105,7 +122,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 };
 
                 // Выполняем запрос и получаем список пользователей
-                var userEntities = context.Service.RetrieveMultiple(userQuery).Entities;
+                var userEntities = context.RetrieveMultiple(userQuery).Entities;
 
                 var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
 
@@ -116,11 +133,11 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 _log.ERROR($"Error in method {nameof(GetUsersByTerritoryId)}: {ex.Message}, {ex}");
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUsersByTerritoryId)} method.", ex);
             }
-
-
-
         }
     }
 }
+
+
+
 
 

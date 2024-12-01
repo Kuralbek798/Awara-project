@@ -18,6 +18,9 @@ using AwaraIT.Kuralbek.Plugins.Helpers;
 
 namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 {
+    /// <summary>
+    /// Плагин для назначения владельца интереса наименее загруженному пользователю при создании интереса.
+    /// </summary>
     public class IntetestPluginAssignmentOnCreation : PluginBase
     {
         private readonly string _teamName = "fnt___Колл-центр";
@@ -54,10 +57,10 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         var usersIdList = GetUserIdListByTeamName(wrapper.Service);
                         _log.INFO($"Получены пользователи команды, количество: {usersIdList.Count}");
 
-                        // Условия для поиска записей 
-                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, InterestStepStatus.InProgress.ToIntValue(), InterestStepStatus.New.ToIntValue());
+                        // Условия для поиска записей
+                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
                         // Получаем наименее загруженного пользователя для сущности Interest
-                        var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName);
+                        var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
 
                         if (responsibleUser.Id == Guid.Empty)
                         {
@@ -172,11 +175,8 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                     }
                 };
 
-                // Выполняем запрос и получаем сущности пользователей
-                var userEntities = service.RetrieveMultiple(userQuery).Entities;
-
-                // Извлекаем идентификаторы пользователей из полученных сущностей
-                var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
+                // Выполняем запрос и получаем сущности пользователей извлекаем идентификаторы пользователей из полученных сущностей
+                var userIds = service.RetrieveMultiple(userQuery).Entities.Select(e => e.ToEntity<User>().SystemUserId).ToList();
 
                 return userIds;
             }
@@ -188,4 +188,8 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         }
     }
 }
+
+
+
+
 

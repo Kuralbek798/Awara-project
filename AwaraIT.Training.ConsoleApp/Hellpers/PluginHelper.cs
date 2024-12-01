@@ -1,5 +1,4 @@
-﻿using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
-using Microsoft.Xrm.Sdk.Query;
+﻿using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk;
 using System.Collections.Generic;
 using System;
@@ -8,7 +7,7 @@ using System.Linq;
 using AwaraIT.Training.Domain.Models.Crm;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
-
+using System.Windows;
 
 namespace AwaraIT.Kuralbek.Plugins.Helpers
 {
@@ -25,12 +24,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <param name="ownerAttributeName">Имя атрибута владельца в сущности.</param>
         /// <returns>Сущность с наименьшей нагрузкой.</returns>
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения запроса.</exception>
-        public static Entity GetLeastLoadedEntity(
-            IContextWrapper wrapper,
-            List<ConditionExpression> conditionExpressions,
-            string entityLogicalName,
-            string ownerAttributeName,
-            Logger log)
+        public static Entity GetLeastLoadedEntity(IOrganizationService wrapper, List<ConditionExpression> conditionExpressions, string entityLogicalName, string ownerAttributeName, Logger log)
         {
             try
             {
@@ -52,7 +46,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 
 
                 // Делаем запрос
-                var entityRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;
+                var entityRecords = wrapper.RetrieveMultiple(loadQuery).Entities;
 
                 if (!entityRecords.Any())
                 {
@@ -62,17 +56,17 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 // Считаем количество записей для каждого пользователя
                 var userLoadCounts = entityRecords
                 .GroupBy(rec =>
-                {
-                    if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
-                    {
-                        return ownerRef.Id;
-                    }
-                    else
-                    {
-                        _log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
-                        return Guid.Empty;
-                    }
-                })
+                 {
+                     if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
+                     {
+                         return ownerRef.Id;
+                     }
+                     else
+                     {
+                         _log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
+                         return Guid.Empty;
+                     }
+                 })
                     .Where(g => g.Key != Guid.Empty)
                     .ToDictionary(g => g.Key, g => g.Count());
                 if (!userLoadCounts.Any())
@@ -120,6 +114,14 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         }
     }
 }
+
+
+
+
+
+
+
+
 
 
 

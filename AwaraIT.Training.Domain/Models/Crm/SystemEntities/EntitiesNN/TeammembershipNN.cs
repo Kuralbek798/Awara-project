@@ -20,22 +20,22 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: Id - Идентификатор записи 
+            /// Логическое имя: ProductCartId - Идентификатор записи 
             /// в связующей таблице между командой и пользователем
             /// </summary>
             public const string TeamMembershipId = "teammembershipid";
             /// <summary>
-            /// Логическое имя: Id - ссылка на команду
+            /// Логическое имя: ProductCartId - ссылка на команду
             /// </summary>
             public const string TeamId = "teamid";
             /// <summary>
-            /// Логическое имя: Id -  ссылка на пользователя
+            /// Логическое имя: ProductCartId -  ссылка на пользователя
             /// </summary>
             public const string SystemUserId = "systemuserid";
         }
 
         /// <summary>
-        /// Свойство: Id - связь между командой и пользователем
+        /// Свойство: ProductCartId - связь между командой и пользователем
         /// </summary>
         public Guid TeamMembershipId
         {
@@ -43,7 +43,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TeamMembershipId] = value; }
         }
         /// <summary>
-        /// Свойство: Id - ссылка на команду
+        /// Свойство: ProductCartId - ссылка на команду
         /// </summary>
         public Guid TeamId
         {
@@ -51,7 +51,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TeamId] = value; }
         }
         /// <summary>
-        /// Свойство: Id - ссылка на пользователя
+        /// Свойство: ProductCartId - ссылка на пользователя
         /// </summary>
         public Guid SystemUserId
         {

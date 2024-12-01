@@ -1,4 +1,5 @@
 ﻿
+using AwaraIT.Kuralbek.Plugins.Helpers;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Training.Domain.Models.Crm;
@@ -88,16 +89,20 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                     if (interest.StatusToEnum == InterestStepStatus.New)
                     {
                         var contact = FindOrCreateContact(_service, interest);
-
                         interest.ContactReference = contact.ToEntityReference();
-                        //_log.INFO($"{nameof(IntetestPluginAssignmentOnCreation)}, контакт назначен. Интерес ID: {interest.Id}, Контакт ID: {contact.Id}");
 
-                        var responsibleUser = GetLeastLoadedUser(_service, interest.TerritoryReference.Id);
+                        var usersIdList = GetUserIdListByTeamName(_service);
+                        _log.INFO($"Получены пользователи команды, количество: {usersIdList.Count}");
+
+                        // Условия для поиска записей
+                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
+                        // Получаем наименее загруженного пользователя для сущности Interest
+                        var responsibleUser = PluginHelper.GetLeastLoadedEntity(_service, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
+
                         if (responsibleUser.Id == Guid.Empty)
                         {
                             return;
                         }
-
 
                         var ownerId = interest.OwnerId;
 
@@ -125,6 +130,13 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
 
         }
 
+        /// <summary>
+        /// Находит или создает контакт на основе предоставленной информации об интересе.
+        /// </summary>
+        /// <param name="wrapper">Контекст выполнения плагина.</param>
+        /// <param name="interest">Информация об интересе.</param>
+        /// <returns>Сущность контакта.</returns>
+        /// <exception cref="Exception">Выбрасывается при возникновении ошибки во время поиска или создания контакта.</exception>
         private Entity FindOrCreateContact(IOrganizationService wrapper, Interest interest)
         {
             try
@@ -140,7 +152,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 query.Criteria.AddCondition(Contact.Metadata.Email, ConditionOperator.Equal, email);
                 query.Criteria.AddCondition(Contact.Metadata.Phone, ConditionOperator.Equal, phone);
 
-                var contacts = _service.RetrieveMultiple(query).Entities;
+                var contacts = wrapper.RetrieveMultiple(query).Entities;
                 if (contacts.Any())
                 {
                     var contact = contacts.First();
@@ -160,121 +172,67 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                         [Contact.Metadata.LastName] = interest.LastName
                     };
 
-                    contact.Id = _service.Create(contact);
-                    _log.INFO($"Контакт создан и назначен к интересу {contact.Id}");
+                    contact.Id = wrapper.Create(contact);
+
                     return contact;
                 }
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в {nameof(FindOrCreateContact)} {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(FindOrCreateContact)}: {ex.Message}", ex);
+                throw;
+                /*_log.ERROR($"Error in method {nameof(FindOrCreateContact)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(FindOrCreateContact)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);*/
             }
         }
 
-        private Entity GetLeastLoadedUser(IOrganizationService wrapper, Guid territoryId)
+        /// <summary>
+        /// Получает список идентификаторов пользователей, которые принадлежат определенной команде.
+        /// </summary>
+        /// <param name="service">Экземпляр IOrganizationService, используемый для выполнения запроса.</param>
+        /// <returns>Список GUID, представляющих идентификаторы пользователей, которые принадлежат указанной команде.</returns>
+        /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
+        private List<Guid> GetUserIdListByTeamName(IOrganizationService service)
         {
             try
             {
-
-
-                var usersId = GetUserIdListByTeamName(_service, _teamName);
-
-                _log.INFO($"Получены пользователи команды, количество: {usersId.Count}");
-
-                var loadQuery = new QueryExpression("fnt_interest")
-                {
-                    // ColumnSet = new ColumnSet(true /*Interest.Metadata.OwnerId*/),
-
-                    ColumnSet = new ColumnSet(Interest.Metadata.InterestId, Interest.Metadata.OwnerId),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                        Conditions =
-                            {
-                                new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                                new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-
-                            }
-                    }
-
-                };
-
-                // Получаем записи интересов
-                var interestRecords = _service.RetrieveMultiple(loadQuery).Entities;
-
-                var ownerId = interestRecords[0].ToEntity<Interest>().OwnerId;
-
-                var statusList = interestRecords.Select(e => e.ToEntity<Interest>());
-                // Подсчитываем интересы для каждого пользователя
-                var userLoadCounts = interestRecords
-                  .GroupBy(record => record.ToEntity<Interest>().OwnerId.Id);
-
-
-                var conunt = userLoadCounts
-                .ToDictionary(g => g.Key, g => g.Count());
-
-                //Получаем пользователя с наименьшей нагрузкой
-                var leastLoadedUserId = conunt
-                  .OrderBy(entry => entry.Value)
-                  .FirstOrDefault().Key;
-
-
-
-                return new Entity(User.EntityLogicalName, leastLoadedUserId);
-            }
-            catch (Exception ex)
-            {
-                _log.ERROR($"Ошибка в {nameof(GetLeastLoadedUser)} {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
-            }
-        }
-
-
-
-        private List<Guid> GetUserIdListByTeamName(IOrganizationService service, string teamName)
-        {
-            try
-            {
-                // Query to get users associated with the team using LinkEntity
+                // Создаем запрос для получения пользователей, связанных с указанной командой
                 var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Field we want to retrieve
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Указываем столбцы для получения
                     LinkEntities =
                     {
-                       new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, "systemuserid", "systemuserid", JoinOperator.Inner)
-                       {
-                             LinkEntities =
-                             {
-                                   new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, "teamid", "teamid", JoinOperator.Inner)
-                                   {
-                                       LinkCriteria = new FilterExpression
-                                       {
-                                              Conditions =
-                                              {
-                                                new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, teamName)
-                                               }
+                        new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
+                        {
+                            LinkEntities =
+                            {
+                                new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, TeammembershipNN.Metadata.TeamId, Team.Metadata.TeamId, JoinOperator.Inner)
+                                {
+                                    LinkCriteria = new FilterExpression
+                                    {
+                                        Conditions =
+                                        {
+                                            new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName) // Фильтрация по имени команды
                                         }
-                                   }
-                             }
-                       }
+                                    }
+                                }
+                            }
+                        }
                     }
                 };
 
-                // Execute the query and get the list of users
-                var userEntities = service.RetrieveMultiple(userQuery).Entities;
+                // Выполняем запрос и получаем сущности пользователей извлекаем идентификаторы пользователей из полученных сущностей
+                var userIds = service.RetrieveMultiple(userQuery).Entities.Select(e => e.ToEntity<User>().SystemUserId).ToList();
 
-                var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();
 
                 return userIds;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Ошибка в методе {nameof(GetUserIdListByTeamName)}: {ex.Message},  {ex}");
-                throw new Exception($"Ошибка в {nameof(GetUserIdListByTeamName)}: {ex.Message}", ex);
+                throw;
+                /*_log.ERROR($"Error in method {nameof(GetUserIdListByTeamName)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUserIdListByTeamName)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);*/
             }
         }
-
 
     }
 }
