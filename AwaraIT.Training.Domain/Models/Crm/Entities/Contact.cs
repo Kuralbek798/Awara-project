@@ -57,11 +57,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
 
         /// <summary>
-        /// Логическое имя сущности контакта.
-        /// </summary>
-        public const string EntityLogicalName = "fnt_contact";
-
-        /// <summary>
         /// Идентификатор контакта.
         /// </summary>
         public Guid ContactId
@@ -69,6 +64,10 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             get { return GetAttributeValue<Guid>(Metadata.ContactId); }
             set { Attributes[Metadata.ContactId] = value; }
         }
+        /// <summary>
+        /// Логическое имя сущности контакта.
+        /// </summary>
+        public const string EntityLogicalName = "fnt_contact";
 
         /// <summary>
         /// Свойство: Электронная почта.

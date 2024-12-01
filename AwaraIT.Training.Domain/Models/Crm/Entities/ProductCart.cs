@@ -47,14 +47,14 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
 
         /// <summary>
-        /// Логическое имя сущности корзины.
+        /// Логическое имя сущности корзина.
         /// </summary>
         public const string EntityLogicalName = "fnt_product_cart";
 
 
 
         /// <summary>
-        /// Свойство: ProductCartId продуктовой корзины.
+        /// Свойство: идентификатор продуктовой корзины.
         /// </summary>
         public Guid ProductCartId
         {

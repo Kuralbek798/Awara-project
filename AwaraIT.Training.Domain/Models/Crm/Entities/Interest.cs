@@ -72,6 +72,15 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             Agreement = 797_720_003,
             Refusal = 797_720_004
         }
+
+        /// <summary>
+        /// Свойство: Получает или задает идентификатор интереса.
+        /// </summary>
+        public Guid InterestId
+        {
+            get { return GetAttributeValue<Guid>(Metadata.InterestId); }
+            set { Attributes[Metadata.InterestId] = value; }
+        }
         /// <summary>Логическое имя: таблицы интереса </summary>  
         public const string EntityLogicalName = "fnt_interest";
 
@@ -84,14 +93,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             set { Attributes[Metadata.Email] = value; }
         }
 
-        /// <summary>
-        /// Свойство: Получает или задает идентификатор интереса.
-        /// </summary>
-        public Guid InterestId
-        {
-            get { return GetAttributeValue<Guid>(Metadata.InterestId); }
-            set { Attributes[Metadata.InterestId] = value; }
-        }
 
         /// <summary>
         /// Свойство: Получает или задает имя.

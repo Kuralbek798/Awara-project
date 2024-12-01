@@ -49,7 +49,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.DTO
             /// </summary>
             public const string PosibleDealEntityAlias = "fnt_possibleDeal"; // Alias for possible deal entity 
         }
-
         /// <summary>
         /// Логическое имя сущности корзины.
         /// </summary>
@@ -97,7 +96,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.DTO
             get { return GetAttributeValue<Money>(Metadata.PriceAfterDiscount); }
             set { Attributes[Metadata.PriceAfterDiscount] = value; }
         }
-
         /// <summary>
         /// Свойство: Id возможной сделки полученое по "алиас".
         /// </summary>

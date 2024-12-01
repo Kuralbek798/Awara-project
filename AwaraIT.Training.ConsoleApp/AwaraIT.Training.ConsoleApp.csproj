@@ -146,6 +146,7 @@
     <Compile Include="Actions\Action.cs" />
     <Compile Include="Actions\ActionEntityReferencedEx.cs" />
     <Compile Include="Actions\ActionRetrievMultipleEx.cs" />
+    <Compile Include="Actions\CalculateTotalPricesDiscountsPluginTest.cs" />
     <Compile Include="Actions\FetchExpressionEx.cs" />
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
     <Compile Include="Actions\MetadataCheck.cs" />

@@ -5,6 +5,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk.Workflow;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
+using AwaraIT.Training.Application.Core;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -18,15 +19,16 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// </summary>
         [Input("PossibleDealId")]
         [RequiredArgument]
-        [ReferenceTarget("opportunity")]
+        [ReferenceTarget(PosibleDeal.EntityLogicalName)]
         public InArgument<EntityReference> Deal { get; set; }
 
         /// <summary>
         /// Входной параметр продукта.
         /// </summary>
         [Input("ProductId")]
-        [ReferenceTarget("product")]
-        public InArgument<EntityReference> Product { get; set; }
+        [RequiredArgument]
+        [ReferenceTarget(Product.EntityLogicalName)]
+        public InArgument<EntityReference> ProductRef { get; set; }
 
         /// <summary>
         /// Входной параметр скидки.
@@ -45,7 +47,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// </summary>
         [Output("DiscountedPrice")]
         public OutArgument<Money> DiscountedPrice { get; set; }
-
+        Logger _log;
         /// <summary>
         /// Метод, выполняющий логику действия.
         /// </summary>
@@ -54,10 +56,10 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         {
             base.Execute(executionContext);
             //Получение входных параметров
-            var deal = Deal.Get(executionContext);
-            var product = Product.Get(executionContext);
+            var dealEntityReference = Deal.Get(executionContext);
+            var productReference = ProductRef.Get(executionContext);
             var discount = Discount.Get(executionContext);
-
+            _log = new Logger(CrmService);
             IWorkflowContext context = executionContext.GetExtension<IWorkflowContext>();
             IOrganizationServiceFactory serviceFactory = executionContext.GetExtension<IOrganizationServiceFactory>();
             IOrganizationService service = serviceFactory.CreateOrganizationService(context.UserId);
@@ -65,30 +67,43 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             try
             {
                 // Получаем территорию из сделки
-                var dealEntity = service.Retrieve(deal.LogicalName, deal.Id, new ColumnSet("territory")).ToEntity<PosibleDeal>();
-                if (dealEntity == null || !dealEntity.Contains("territory"))
+                var territoryReference = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id, new ColumnSet(PosibleDeal.Metadata.TerritoryReference)).ToEntity<PosibleDeal>().TerritoryReference;
+                if (territoryReference == null || territoryReference.Id == Guid.Empty)
                 {
-                    throw new InvalidPluginExecutionException("Не удалось получить территорию из возможной сделки.");
+                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)} territory is null");
+                    throw new InvalidPluginExecutionException("Failed to retrieve territory from possible deal");
                 }
-                var territoryRef = dealEntity.TerritoryReference; //.GetAttributeValue<EntityReference>("territory");
 
                 // Получаем информацию о продукте
-                var productEntity = service.Retrieve(product.LogicalName, product.Id, new ColumnSet("formatpreparation", "formatconducting", "subjectpreparation"));
+                var productEntity = service.Retrieve(productReference.LogicalName, productReference.Id,
+                                                     new ColumnSet(Product.Metadata.FormatPreparationReference,
+                                                     Product.Metadata.FormatConductionReference,
+                                                     Product.Metadata.SubjectPreparationReference)).ToEntity<Product>();
                 if (productEntity == null)
                 {
-                    throw new InvalidPluginExecutionException("Не удалось получить информацию о продукте.");
+                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)} product info is null");
+                    throw new InvalidPluginExecutionException("Product info is null");
                 }
-                string formatPreparation = productEntity.GetAttributeValue<string>("formatpreparation");
-                string formatConducting = productEntity.GetAttributeValue<string>("formatconducting");
-                string subjectPreparation = productEntity.GetAttributeValue<string>("subjectpreparation");
+
+                Guid formatPreparation = productEntity.EducationTypeReference;
+                Guid formatConducting = productEntity.EventTypeReference;
+                Guid subjectPreparation = productEntity.SubjectReference;
 
                 // Запрос к прайс листу для получения базовой цены
-                QueryExpression query = new QueryExpression("pricelevel");
-                query.ColumnSet = new ColumnSet("baseprice");
-                query.Criteria.AddCondition("territory", ConditionOperator.Equal, territoryRef.Id);
-                query.Criteria.AddCondition("formatpreparation", ConditionOperator.Equal, formatPreparation);
-                query.Criteria.AddCondition("formatconducting", ConditionOperator.Equal, formatConducting);
-                query.Criteria.AddCondition("subjectpreparation", ConditionOperator.Equal, subjectPreparation);
+                QueryExpression query = new QueryExpression("pricelevel")
+                {
+                    ColumnSet = new ColumnSet("baseprice"),
+                    Criteria = new FilterExpression
+                    {
+                        Conditions =
+                        {
+                            new ConditionExpression("territory", ConditionOperator.Equal, territoryReference.Id),
+                            new ConditionExpression("formatpreparation", ConditionOperator.Equal, formatPreparation),
+                            new ConditionExpression("formatconducting", ConditionOperator.Equal, formatConducting),
+                            new ConditionExpression("subjectpreparation", ConditionOperator.Equal, subjectPreparation)
+                        }
+                    }
+                };
 
                 var results = service.RetrieveMultiple(query);
                 if (results.Entities.Count == 0)
@@ -111,3 +126,4 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         }
     }
 }
+

@@ -31,7 +31,14 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             /// </summary>
             public const string TerritoryID = "fnt_territoryid";
         }
-
+        /// <summary>
+        /// Свойство: идентификатор территории.
+        /// </summary>
+        public Guid TerritoryID
+        {
+            get { return GetAttributeValue<Guid>(Metadata.TerritoryID); }
+            set { Attributes[Metadata.TerritoryID] = value; }
+        }
         /// <summary>
         /// Логическое имя сущности территории.
         /// </summary>
@@ -44,15 +51,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
             get { return GetAttributeValue<string>(Metadata.TerritoryName); }
             set { Attributes[Metadata.TerritoryName] = value; }
-        }
-
-        /// <summary>
-        /// Свойство: идентификатор территории.
-        /// </summary>
-        public string TerritoryID
-        {
-            get { return GetAttributeValue<string>(Metadata.TerritoryID); }
-            set { Attributes[Metadata.TerritoryID] = value; }
         }
     }
 }

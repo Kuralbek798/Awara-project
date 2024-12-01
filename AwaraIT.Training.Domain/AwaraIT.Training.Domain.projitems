@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Interest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PosibleDeal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\ProductCart.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Product.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Territory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\EntityCommon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\EnvironmentVariableDefinition.cs" />

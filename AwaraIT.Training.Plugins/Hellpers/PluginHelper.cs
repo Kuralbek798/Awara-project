@@ -49,8 +49,6 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 // Добавляем условия в запрос
                 conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
 
-
-
                 // Делаем запрос
                 var entityRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;
 
