@@ -1,4 +1,5 @@
-﻿using Microsoft.Xrm.Sdk.Client;
+﻿using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Client;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -53,25 +54,25 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         /// <summary>
         /// Свойство:  Формата проведения.
         /// </summary>
-        public Guid EventTypeReference
+        public EntityReference FormatConductionReference
         {
-            get { return GetAttributeValue<Guid>(Metadata.FormatConductionReference); }
+            get { return GetAttributeValue<EntityReference>(Metadata.FormatConductionReference); }
             set { Attributes[Metadata.FormatConductionReference] = value; }
         }
         /// <summary>
         /// Свойство:  Формата подготовки.
         /// </summary>
-        public Guid EducationTypeReference
+        public EntityReference FormatPreparationReference
         {
-            get { return GetAttributeValue<Guid>(Metadata.FormatPreparationReference); }
+            get { return GetAttributeValue<EntityReference>(Metadata.FormatPreparationReference); }
             set { Attributes[Metadata.FormatPreparationReference] = value; }
         }
         /// <summary>
         /// Свойство: предмет.
         /// </summary>
-        public Guid SubjectReference
+        public EntityReference SubjectPreparationReference
         {
-            get { return GetAttributeValue<Guid>(Metadata.SubjectPreparationReference); }
+            get { return GetAttributeValue<EntityReference>(Metadata.SubjectPreparationReference); }
             set { Attributes[Metadata.SubjectPreparationReference] = value; }
         }
 

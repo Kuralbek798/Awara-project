@@ -13,11 +13,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
 
         public TerritoryTeamNN() : base(EntityLogicalName) { }
 
-        /// <summary>
-        /// Логическое имя: таблицы территории.
-        /// </summary>
-        public const string EntityLogicalName = "fnt_territory_team";
-
         public static class Metadata
         {
             /// <summary>
@@ -35,10 +30,13 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             /// </summary>
             public const string TeamId = "teamid";
         }
+        /// <summary>
+        /// таблица связи между территорией и команой.
+        /// </summary>
+        public const string EntityLogicalName = "fnt_territory_team";
 
         /// <summary>
-        /// Свойство: ProductCartId - записи 
-        /// в связующей таблице между территорией и командой
+        /// Свойство: связующей таблице между территорией и командой
         /// </summary>
         public Guid TerritoryTeamId
         {
@@ -46,7 +44,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TerritoryTeamId] = value; }
         }
         /// <summary>
-        /// Свойство: ProductCartId - Идентификатор территории
+        /// Свойство:  Идентификатор территории
         /// </summary>
         public Guid TerritoryId
         {
@@ -54,7 +52,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
             set { Attributes[Metadata.TerritoryId] = value; }
         }
         /// <summary>
-        /// Свойство: ProductCartId -  Идентификатор команды.
+        /// Свойство:   Идентификатор команды.
         /// </summary>
         public Guid TeamId
         {

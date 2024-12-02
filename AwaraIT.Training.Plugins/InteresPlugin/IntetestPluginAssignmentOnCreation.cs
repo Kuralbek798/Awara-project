@@ -55,7 +55,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         interest.ContactReference = contact.ToEntityReference();
 
                         var usersIdList = GetUserIdListByTeamName(wrapper.Service);
-                        _log.INFO($"Получены пользователи команды, количество: {usersIdList.Count}");
+                        _log.INFO($"participant's of team received: {usersIdList.Count}");
 
                         // Условия для поиска записей
                         var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
@@ -69,8 +69,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 
                         interest.OwnerId = responsibleUser.ToEntityReference();
 
-                        _log.INFO($"InterestAssignmentPlugin: Владелец интереса назначен - " +
-                        $"ID интереса: {interest.Id}, ID владельца: {interest.OwnerId.Id} имя {interest.OwnerId.Name} логическое имя {interest.OwnerId.LogicalName}");
+                        _log.INFO($"InterestAssignmentPlugin: ID inteers: {interest.Id}, ID owner: {interest.OwnerId.Id} name {interest.OwnerId.Name} logical name {interest.OwnerId.LogicalName}");
                     }
                 }
                 else
@@ -112,7 +111,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 if (contacts.Any())
                 {
                     var contact = contacts.First();
-                    _log.INFO($"Контакт назначен к интересу {contact.Id}");
+                    _log.INFO($"Contact assigned to the interest {contact.Id}");
                     return contact;
                 }
                 else

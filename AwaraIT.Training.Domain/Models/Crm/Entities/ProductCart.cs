@@ -6,6 +6,13 @@ using System.Text;
 
 namespace AwaraIT.Training.Domain.Models.Crm.Entities
 {
+    /*плагин, который будет получать все продуктовые корзины для 
+     * возможной сделки суммировать поля Цена базовая, Скидка,
+     * Цена после скидки и заполнять соответствующие поля на возможной сделке
+     * Table LogicalName of NN relation:  posible_deal_fnt_product_cart
+     */
+
+
 
     /// <summary>
     /// Класс <c>ProductCart</c> представляет сущность продуктовой корзины в CRM.

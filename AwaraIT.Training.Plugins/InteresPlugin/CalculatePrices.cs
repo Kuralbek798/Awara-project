@@ -6,6 +6,7 @@ using Microsoft.Xrm.Sdk.Workflow;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using AwaraIT.Training.Application.Core;
+using System.Linq;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -34,7 +35,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// Входной параметр скидки.
         /// </summary>
         [Input("Discount")]
-        public InArgument<decimal> Discount { get; set; }
+        public InArgument<Money> Discount { get; set; }
 
         /// <summary>
         /// Выходной параметр базовой цены.
@@ -47,7 +48,9 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// </summary>
         [Output("DiscountedPrice")]
         public OutArgument<Money> DiscountedPrice { get; set; }
-        Logger _log;
+
+        private Logger _log;
+
         /// <summary>
         /// Метод, выполняющий логику действия.
         /// </summary>
@@ -55,7 +58,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         protected override void Execute(CodeActivityContext executionContext)
         {
             base.Execute(executionContext);
-            //Получение входных параметров
+            // Получение входных параметров
             var dealEntityReference = Deal.Get(executionContext);
             var productReference = ProductRef.Get(executionContext);
             var discount = Discount.Get(executionContext);
@@ -66,8 +69,10 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
             try
             {
-                // Получаем территорию из сделки
-                var territoryReference = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id, new ColumnSet(PosibleDeal.Metadata.TerritoryReference)).ToEntity<PosibleDeal>().TerritoryReference;
+                // Получаем информацию о возможной сделке
+                var possibleDeal = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id, new ColumnSet(PosibleDeal.Metadata.TerritoryReference)).ToEntity<PosibleDeal>();
+                var territoryReference = possibleDeal.TerritoryReference;
+
                 if (territoryReference == null || territoryReference.Id == Guid.Empty)
                 {
                     _log.ERROR($"Error in customStep {nameof(CalculatePrices)} territory is null");
@@ -77,53 +82,62 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 // Получаем информацию о продукте
                 var productEntity = service.Retrieve(productReference.LogicalName, productReference.Id,
                                                      new ColumnSet(Product.Metadata.FormatPreparationReference,
-                                                     Product.Metadata.FormatConductionReference,
-                                                     Product.Metadata.SubjectPreparationReference)).ToEntity<Product>();
+                                                                   Product.Metadata.FormatConductionReference,
+                                                                   Product.Metadata.SubjectPreparationReference)).ToEntity<Product>();
                 if (productEntity == null)
                 {
                     _log.ERROR($"Error in customStep {nameof(CalculatePrices)} product info is null");
                     throw new InvalidPluginExecutionException("Product info is null");
                 }
 
-                Guid formatPreparation = productEntity.EducationTypeReference;
-                Guid formatConducting = productEntity.EventTypeReference;
-                Guid subjectPreparation = productEntity.SubjectReference;
+                var formatPreparation = productEntity.FormatPreparationReference;
+                var formatConducting = productEntity.FormatConductionReference;
+                var subjectPreparation = productEntity.SubjectPreparationReference;
+
 
                 // Запрос к прайс листу для получения базовой цены
-                QueryExpression query = new QueryExpression("pricelevel")
+                QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet("baseprice"),
+                    ColumnSet = new ColumnSet(PriceListPositions.Metadata.Price),
                     Criteria = new FilterExpression
                     {
                         Conditions =
                         {
-                            new ConditionExpression("territory", ConditionOperator.Equal, territoryReference.Id),
-                            new ConditionExpression("formatpreparation", ConditionOperator.Equal, formatPreparation),
-                            new ConditionExpression("formatconducting", ConditionOperator.Equal, formatConducting),
-                            new ConditionExpression("subjectpreparation", ConditionOperator.Equal, subjectPreparation)
+                            new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
+                            new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, formatPreparation),
+                            new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, formatConducting),
+                            new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subjectPreparation)
                         }
                     }
                 };
 
-                var results = service.RetrieveMultiple(query);
-                if (results.Entities.Count == 0)
+                var result = service.RetrieveMultiple(query).Entities.FirstOrDefault().ToEntity<PriceListPositions>();
+                if (result == null)
                 {
-                    throw new InvalidPluginExecutionException("Не удалось найти запись в прайс-листе для указанных параметров.");
+                    throw new InvalidPluginExecutionException("No data in price list.");
                 }
-                decimal basePrice = results.Entities[0].GetAttributeValue<Money>("baseprice")?.Value ?? 0;
+                Money basePrice = result.Price;
 
                 // Вычисление цены со скидкой
-                decimal discountedPrice = basePrice - discount;
+                Money discountedPrice = new Money(basePrice.Value - discount.Value);
 
                 // Установка выходных параметров
-                BasePrice.Set(executionContext, new Money(basePrice));
-                DiscountedPrice.Set(executionContext, new Money(discountedPrice));
+                BasePrice.Set(executionContext, basePrice);
+                DiscountedPrice.Set(executionContext, discountedPrice);
             }
             catch (Exception ex)
             {
-                throw new InvalidPluginExecutionException("Ошибка при расчете цен: " + ex.Message);
+                _log.ERROR($"Error in customStep {nameof(CalculatePrices)} product info is null");
+                throw new InvalidPluginExecutionException("Exception during calculation total price");
             }
         }
     }
 }
+
+
+
+
+
+
+
 

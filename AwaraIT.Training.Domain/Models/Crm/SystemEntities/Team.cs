@@ -13,7 +13,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: ProductCartId - идентификатор команды.
+            /// Логическое имя: идентификатор команды.
             /// </summary>
             public const string TeamId = "teamid";
             /// <summary>
@@ -23,10 +23,13 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
 
         }
         /// <summary>
-        /// Логическое имя: таблицы пользователя.
+        /// Логическое имя: таблицы команды.
         /// </summary>
         public const string EntityLogicalName = "team";
 
+        /// <summary>
+        /// Свойство: идентификатор команды.
+        /// </summary>
         public Guid TeamId
         {
             get { return GetAttributeValue<Guid>(Metadata.TeamId); }

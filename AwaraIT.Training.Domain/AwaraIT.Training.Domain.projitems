@@ -21,6 +21,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Contact.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Interest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PosibleDeal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PriceList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PriceListPositions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\ProductCart.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Product.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Territory.cs" />

@@ -14,11 +14,11 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
     /// <summary>
     /// Плагин для расчета полей цен в сделке при создании продуктовой корзины.
     /// </summary>
-    public class CalculateTotalPricesDiscountsPlugin : PluginBase
+    public class TotalPricesDiscountsOnProductCartCreationPlugin : PluginBase
     {
         private Logger _log;
 
-        public CalculateTotalPricesDiscountsPlugin() : base()
+        public TotalPricesDiscountsOnProductCartCreationPlugin() : base()
         {
             Subscribe
                 .ToMessage(CrmMessage.Create)
@@ -46,7 +46,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     return;
                 }
 
-                //запрос для получения идентификатора возможной сделки
+                // Получаем идентификатор возможной сделки из связи N:N
                 var possibleDealId = GetPossibleDealId(wrapper.Service, productCart.Id);
 
                 if (possibleDealId == null)
@@ -55,7 +55,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     return;
                 }
 
-                // Запрос для получения продуктовых корзин, связанных с возможной сделкой
+                // Запрос для получения всех продуктовых корзин, связанных с возможной сделкой
                 QueryExpression query = new QueryExpression(ProductCart.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(ProductCart.Metadata.Price, ProductCart.Metadata.Discount, ProductCart.Metadata.PriceAfterDiscount),
@@ -83,11 +83,6 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 decimal totalDiscount = productCarts.Sum(pc => pc.Discount?.Value ?? 0);
                 decimal totalPriceAfterDiscount = productCarts.Sum(pc => pc.PriceAfterDiscount?.Value ?? 0);
 
-                //Добавление сумм в сущность PossibleDeal
-                totalBasePrice += productCart.Price?.Value ?? 0;
-                totalDiscount += productCart.Discount?.Value ?? 0;
-                totalPriceAfterDiscount += productCart.PriceAfterDiscount?.Value ?? 0;
-
                 // Обновление сущности PossibleDeal
                 Entity possibleDeal = new Entity(PosibleDeal.EntityLogicalName, possibleDealId.Value)
                 {
@@ -100,8 +95,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Error in method {nameof(Calculate)} of {nameof(CalculateTotalPricesDiscountsPlugin)}: {ex.Message}, {ex}");
-                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(Calculate)} method of {nameof(CalculateTotalPricesDiscountsPlugin)}.", ex);
+                _log.ERROR($"Error in method {nameof(Calculate)} of {nameof(TotalPricesDiscountsOnProductCartCreationPlugin)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(Calculate)} method of {nameof(TotalPricesDiscountsOnProductCartCreationPlugin)}.", ex);
             }
         }
 
@@ -125,15 +120,20 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 }
             };
 
-            EntityCollection results = service.RetrieveMultiple(query);
+            var result = service.RetrieveMultiple(query).Entities.FirstOrDefault();
 
-            if (results.Entities.Count > 0)
+            if (result != null)
             {
-                return results.Entities.First().GetAttributeValue<Guid>(PossibleDealProductCartNN.Metadata.PossibleDealId);
+                return result.ToEntity<PossibleDealProductCartNN>().PossibleDealId;
             }
 
             return null;
         }
+
     }
 }
+
+
+
+
 

@@ -13,7 +13,8 @@ namespace AwaraIT.Kuralbek.Plugins
 
             //IntetestPluginAssignmentOnCreationTest.Run();
             //ProductBasketPriceCalculationPlugin.Run();
-            PossibleDealLessBusyUserAssignmentPluginTest.Run();
+            // PossibleDealLessBusyUserAssignmentPluginTest.Run();
+            /// Test1232.Run();
 
             /*     try
                  {
