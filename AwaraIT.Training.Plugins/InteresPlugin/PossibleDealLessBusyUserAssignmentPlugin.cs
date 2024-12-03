@@ -56,7 +56,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PossibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
 
 
-                if (responsibleUser.Id == Guid.Empty)
+                if (responsibleUser is Entity && responsibleUser.Id == Guid.Empty)
                 {
                     return;
                 }

@@ -146,6 +146,7 @@
     <Compile Include="Actions\Action.cs" />
     <Compile Include="Actions\ActionEntityReferencedEx.cs" />
     <Compile Include="Actions\ActionRetrievMultipleEx.cs" />
+    <Compile Include="Actions\CalculatePrices2.cs" />
     <Compile Include="Actions\CalculateTotalPricesDiscountsPluginTest.cs" />
     <Compile Include="Actions\FetchExpressionEx.cs" />
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
@@ -153,7 +154,6 @@
     <Compile Include="Actions\PossibleDealLessBusyUserAssignmentPluginTest.cs" />
     <Compile Include="Actions\ProductBasketPriceCalculationPlugin.cs" />
     <Compile Include="Actions\IntetestPluginAssignmentOnCreationTest.cs" />
-    <Compile Include="Actions\Test1232.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="CalculatePricesBackUp.cs" />
     <Compile Include="Hellpers\DataForLogs.cs" />

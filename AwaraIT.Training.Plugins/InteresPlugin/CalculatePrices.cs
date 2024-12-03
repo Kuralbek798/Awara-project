@@ -5,8 +5,13 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk.Workflow;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
-using AwaraIT.Training.Application.Core;
+
 using System.Linq;
+using AwaraIT.Training.Application.Core;
+
+
+
+
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -15,46 +20,30 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
     /// </summary>
     public class CalculatePrices : CodeActivity
     {
-        /// <summary>
-        /// Входной параметр сделки.
-        /// </summary>
+        [RequiredArgument]
         [Input("PossibleDealId")]
-        [RequiredArgument]
         [ReferenceTarget(PossibleDeal.EntityLogicalName)]
-        public InArgument<EntityReference> Deal { get; set; }
+        public InArgument<EntityReference> PossibleDealId { get; set; }
+        // public InArgument<string> PossibleDealId { get; set; }
 
-        /// <summary>
-        /// Входной параметр продукта.
-        /// </summary>
-        [Input("ProductId")]
         [RequiredArgument]
+        [Input("ProductId")]
         [ReferenceTarget(Product.EntityLogicalName)]
-        public InArgument<EntityReference> ProductRef { get; set; }
+        public InArgument<EntityReference> ProductId { get; set; }
+        //public InArgument<string> ProductId { get; set; }
 
-        /// <summary>
-        /// Входной параметр скидки.
-        /// </summary>
         [Input("Discount")]
         public InArgument<Money> Discount { get; set; }
 
-        /// <summary>
-        /// Выходной параметр базовой цены.
-        /// </summary>
+
         [Output("BasePrice")]
         public OutArgument<Money> BasePrice { get; set; }
 
-        /// <summary>
-        /// Выходной параметр цены со скидкой.
-        /// </summary>
+
         [Output("DiscountedPrice")]
         public OutArgument<Money> DiscountedPrice { get; set; }
 
         private Logger _log;
-
-        /// <summary>
-        /// Метод, выполняющий логику действия.
-        /// </summary>
-        /// <param name="context">Контекст выполнения действия.</param>
         protected override void Execute(CodeActivityContext context)
         {
             var workflowContext = context.GetExtension<IWorkflowContext>();
@@ -65,15 +54,15 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             _log.INFO("CalculatePrices started");
 
             // Получение входных параметров
-            var dealEntityReference = Deal.Get(context);
-            var productReference = ProductRef.Get(context);
+            var dealEntityReference = PossibleDealId.Get(context);
+            var productReference = ProductId.Get(context);
             var discount = Discount.Get(context);
 
             try
             {
-                _log.INFO($"CalculatePrices dealEntityReference received: {dealEntityReference?.Id}");
-                _log.INFO($"CalculatePrices productReference received: {productReference?.Id}");
-                _log.INFO($"CalculatePrices discount received: {discount?.Value}");
+                _log.INFO($"CalculatePrices dealEntityReference received: {dealEntityReference.Id.ToString()}");
+                _log.INFO($"CalculatePrices productReference received: {productReference.Id.ToString()}");
+                _log.INFO($"CalculatePrices discount received: {discount?.Value.ToString()}");
 
 
                 if (dealEntityReference == null || productReference == null || discount == null)
@@ -83,7 +72,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 }
 
                 // Получаем информацию о возможной сделке
-                var possibleDeal = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id, new ColumnSet(PossibleDeal.Metadata.TerritoryReference)).ToEntity<PossibleDeal>();
+                var possibleDeal = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id,
+                                                    new ColumnSet(PossibleDeal.Metadata.TerritoryReference)).ToEntity<PossibleDeal>();
                 var territoryReference = possibleDeal.TerritoryReference;
                 _log.INFO($"Territory Reference received: {territoryReference?.Id}");
 
@@ -104,9 +94,9 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     throw new InvalidPluginExecutionException("Product info is null");
                 }
 
-                var formatPreparation = productEntity.FormatPreparationReference;
-                var formatConducting = productEntity.FormatConductionReference;
-                var subjectPreparation = productEntity.SubjectPreparationReference;
+                var formatPreparation = productEntity.FormatPreparationReference.Id;
+                var formatConducting = productEntity.FormatConductionReference.Id;
+                var subjectPreparation = productEntity.SubjectPreparationReference.Id;
 
                 // Запрос к прайс листу для получения базовой цены
                 QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
@@ -144,7 +134,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             catch (Exception ex)
             {
                 _log.ERROR(ex, $"Error in customStep {nameof(CalculatePrices)}");
-                throw new InvalidPluginExecutionException("Exception during calculation total price", ex);
+                throw new InvalidPluginExecutionException("Exception during calculation total price" + ex.Message, ex);
             }
         }
     }

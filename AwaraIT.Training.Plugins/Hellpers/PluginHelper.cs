@@ -8,6 +8,8 @@ using System.Linq;
 using AwaraIT.Training.Domain.Models.Crm;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
+using AwaraIT.Training.Domain.Extensions;
 
 
 namespace AwaraIT.Kuralbek.Plugins.Helpers
@@ -55,7 +57,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 if (!entityRecords.Any())
                 {
                     _log.WARNING("No records found matching the specified conditions.");
-                    return null;
+                    return new Entity();
                 }
                 // Считаем количество записей для каждого пользователя
                 var userLoadCounts = entityRecords
@@ -76,7 +78,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 if (!userLoadCounts.Any())
                 {
                     _log.WARNING("No users found with the specified conditions.");
-                    return null;
+                    return new Entity();
                 }
 
                 // Вычисляем пользователя с наименьшей нагрузкой
@@ -111,7 +113,8 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             var conditions = new List<ConditionExpression>
                {
                new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersIdList.ToArray()),
-               new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1)
+               new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1),
+               new ConditionExpression(statusAttributeName, ConditionOperator.NotEqual, InterestStepStatus.Agreement.ToIntValue())
                 };
             return conditions;
 

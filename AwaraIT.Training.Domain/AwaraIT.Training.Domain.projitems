@@ -30,7 +30,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\EnvironmentVariableDefinition.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\EnvironmentVariableValue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Log.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\EntitiesNN\PossibleDealProductCartNN.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\EntitiesNN\TeammembershipNN.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\EntitiesNN\TerritoryTeamNN.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\User.cs" />

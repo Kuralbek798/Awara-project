@@ -15,8 +15,9 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
             public const string PriceListPostionId = "fnt_price_list_positionid";
             public const string PriceListReference = "fnt_price_list";
-            public const string SubjectReference = "fnt_subject";
             public const string TerritoryReference = "fnt_territoryid";
+            public const string SubjectReference = "fnt_subject";
+
             public const string FormatPreparationReference = "fnt_format_preparation";
             public const string FormatConductionReference = "fnt_format_condaction";
             public const string Price = "fnt_price";
@@ -33,6 +34,11 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
             get { return GetAttributeValue<EntityReference>(Metadata.PriceListReference); }
             set { Attributes[Metadata.PriceListReference] = value; }
+        } 
+        public EntityReference TerritoryReference
+        {
+            get { return GetAttributeValue<EntityReference>(Metadata.TerritoryReference); }
+            set { Attributes[Metadata.TerritoryReference] = value; }
         }
         public EntityReference SubjectReference
         {

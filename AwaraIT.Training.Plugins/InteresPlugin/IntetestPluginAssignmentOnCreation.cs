@@ -62,7 +62,8 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         // Получаем наименее загруженного пользователя для сущности Interest
                         var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
 
-                        if (responsibleUser.Id == Guid.Empty)
+                        //Проверяем, что пользователь найден и его идентификатор не пустой
+                        if (responsibleUser is Entity && responsibleUser.Id == Guid.Empty)
                         {
                             return;
                         }
