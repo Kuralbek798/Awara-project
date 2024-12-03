@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.IdentityModel.Protocols.WSTrust;
 
@@ -78,11 +78,11 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                     }
 
                     // Создание новой записи в сущности "Возможная сделка"
-                    var possibleDealEntity = new Entity(PosibleDeal.EntityLogicalName)
+                    var possibleDealEntity = new Entity(PossibleDeal.EntityLogicalName)
                     {
-                        [PosibleDeal.Metadata.ContactReference] = contactReference,
-                        [PosibleDeal.Metadata.Status] = new OptionSetValue(PosibleDealStepStatus.Open.ToIntValue()),
-                        [PosibleDeal.Metadata.TerritoryReference] = territoryReference
+                        [PossibleDeal.Metadata.ContactReference] = contactReference,
+                        [PossibleDeal.Metadata.Status] = new OptionSetValue(PossibleDealStepStatus.Open.ToIntValue()),
+                        [PossibleDeal.Metadata.TerritoryReference] = territoryReference
                     };
 
                     var dealId = wrapper.Service.Create(possibleDealEntity);

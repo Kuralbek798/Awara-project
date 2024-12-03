@@ -111,8 +111,8 @@
     <Compile Include="Hellpers\DataForLogs.cs" />
     <Compile Include="Hellpers\MappingProfile.cs" />
     <Compile Include="Hellpers\PluginHelper.cs" />
-    <Compile Include="InteresPlugin\TotalPricesDiscountsOnProductCartCreationPlugin.cs" />
     <Compile Include="InteresPlugin\CalculatePrices.cs" />
+    <Compile Include="InteresPlugin\TotalPricesDiscountsOnProductCartCreationPlugin.cs" />
     <Compile Include="InteresPlugin\PossibleDealLessBusyUserAssignmentPlugin.cs" />
     <Compile Include="InteresPlugin\CreatePossibleDealOnInterestApprovalPlugin.cs" />
     <Compile Include="InteresPlugin\IntetestPluginAssignmentOnCreation.cs" />

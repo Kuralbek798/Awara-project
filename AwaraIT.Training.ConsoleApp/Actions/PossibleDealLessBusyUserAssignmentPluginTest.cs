@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 
 namespace AwaraIT.Kuralbek.Plugins.Actions
 {
@@ -67,18 +67,18 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             try
             {
 
-                //var posibleDeal = wrapper.?.TargetEntity.ToEntity<PosibleDeal>();
+                //var posibleDeal = wrapper.?.TargetEntity.ToEntity<PossibleDeal>();
                 //var territoryId = posibleDeal.TerritoryReference.ProductCartId;
 
-                var posibleDeal = new PosibleDeal() { TerritoryReference = new EntityReference { Id = Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6") } };
+                var posibleDeal = new PossibleDeal() { TerritoryReference = new EntityReference { Id = Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6") } };
                 var territoryId = posibleDeal.TerritoryReference.Id;
                 // Получаем всех пользователей из рабочих групп, связанных с территорией
                 List<Guid> usersIdList = GetUsersByTerritoryId(wrapper, territoryId);
 
                 // Условия для поиска записей 
-                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PosibleDeal.Metadata.Status, PosibleDealStepStatus.InProgress.ToIntValue());
+                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PossibleDeal.Metadata.Status, PossibleDealStepStatus.InProgress.ToIntValue());
                 // Получаем наименее загруженного пользователя 
-                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PosibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
+                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PossibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
 
 
                 if (responsibleUser.Id == Guid.Empty)

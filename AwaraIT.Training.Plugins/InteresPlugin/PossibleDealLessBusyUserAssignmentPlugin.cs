@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.Collections.Generic;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
@@ -29,7 +29,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         {
             Subscribe
                 .ToMessage(CrmMessage.Create)
-                .ForEntity(PosibleDeal.EntityLogicalName)
+                .ForEntity(PossibleDeal.EntityLogicalName)
                 .When(PluginStage.PreOperation)
                 .Execute(Execute);
         }
@@ -45,15 +45,15 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
             try
             {
-                var posibleDeal = wrapper?.TargetEntity.ToEntity<PosibleDeal>();
+                var posibleDeal = wrapper?.TargetEntity.ToEntity<PossibleDeal>();
                 var territoryId = posibleDeal.TerritoryReference.Id;
                 // Получаем всех пользователей из рабочих групп, связанных с территорией
                 List<Guid> usersIdList = GetUsersByTerritoryId(wrapper.Service, territoryId);
 
                 // Условия для поиска записей 
-                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PosibleDeal.Metadata.Status, PosibleDealStepStatus.InProgress.ToIntValue());
+                var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, PossibleDeal.Metadata.Status, PossibleDealStepStatus.InProgress.ToIntValue());
                 // Получаем наименее загруженного пользователя 
-                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PosibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
+                var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, PossibleDeal.EntityLogicalName, EntityCommon.OwnerId, _log);
 
 
                 if (responsibleUser.Id == Guid.Empty)

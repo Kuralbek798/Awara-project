@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.PosibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.Collections.Generic;
 using AwaraIT.Kuralbek.Plugins.Actions;

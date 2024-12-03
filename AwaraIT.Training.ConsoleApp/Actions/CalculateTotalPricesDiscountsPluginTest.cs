@@ -76,10 +76,10 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                         {
                             LinkEntities =
                             {
-                                new LinkEntity(PossibleDealProductCartNN.EntityLogicalName, PosibleDeal.EntityLogicalName, PossibleDealProductCartNN.Metadata.PossibleDealId, PosibleDeal.Metadata.PosibleDealId, JoinOperator.Inner)
+                                new LinkEntity(PossibleDealProductCartNN.EntityLogicalName, PossibleDeal.EntityLogicalName, PossibleDealProductCartNN.Metadata.PossibleDealId, PossibleDeal.Metadata.PosibleDealId, JoinOperator.Inner)
                                 {
-                                    Columns = new ColumnSet(PosibleDeal.Metadata.PosibleDealId),
-                                    EntityAlias = PosibleDeal.EntityAlias
+                                    Columns = new ColumnSet(PossibleDeal.Metadata.PosibleDealId),
+                                    EntityAlias = PossibleDeal.EntityAlias
                                 }
                             }
                         }
@@ -108,11 +108,11 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 }
 
                 // обновляем поля в возможной сделке
-                Entity possibleDeal = new Entity(PosibleDeal.EntityLogicalName, possibleDealId)
+                Entity possibleDeal = new Entity(PossibleDeal.EntityLogicalName, possibleDealId)
                 {
-                    [PosibleDeal.Metadata.Price] = new Money(totalBasePrice),
-                    [PosibleDeal.Metadata.Discount] = new Money(totalDiscount),
-                    [PosibleDeal.Metadata.PriceAfterDiscount] = new Money(totalPriceAfterDiscount)
+                    [PossibleDeal.Metadata.Price] = new Money(totalBasePrice),
+                    [PossibleDeal.Metadata.Discount] = new Money(totalDiscount),
+                    [PossibleDeal.Metadata.PriceAfterDiscount] = new Money(totalPriceAfterDiscount)
                 };
 
                 wrapper.Service.Update(possibleDeal);

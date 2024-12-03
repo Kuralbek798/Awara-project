@@ -36,9 +36,13 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             public const string ProductCartId = "fnt_product_cartid";
 
             /// <summary>
-            /// Логическое имя: ссылки продукта.
+            /// Логическое имя: ссылка продукт.
             /// </summary>
             public const string ProductReference = "fnt_productid";
+            /// <summary>
+            /// Логическое имя: ссылка возможная сделка.
+            /// </summary>
+            public const string PossibleDealReference = "fnt_posible_deal";
             /// <summary>
             /// Логическое имя: cкидка.
             /// </summary>
@@ -58,8 +62,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         /// </summary>
         public const string EntityLogicalName = "fnt_product_cart";
 
-
-
         /// <summary>
         /// Свойство: идентификатор продуктовой корзины.
         /// </summary>
@@ -71,10 +73,18 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         /// <summary>
         /// Свойство: ссылка продукта.
         /// </summary>
-        public string ProductReference
+        public EntityReference ProductReference
         {
-            get { return GetAttributeValue<string>(Metadata.ProductReference); }
+            get { return GetAttributeValue<EntityReference>(Metadata.ProductReference); }
             set { Attributes[Metadata.ProductReference] = value; }
+        }
+        /// <summary>
+        /// Свойство: ссылка возможная сделка.
+        /// </summary>
+        public EntityReference PossibleDealReference
+        {
+            get { return GetAttributeValue<EntityReference>(Metadata.PossibleDealReference); }
+            set { Attributes[Metadata.PossibleDealReference] = value; }
         }
         /// <summary>
         /// Свойство: cкидка.

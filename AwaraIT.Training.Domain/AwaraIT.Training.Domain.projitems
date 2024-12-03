@@ -20,7 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\DTO\ProductCartDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Contact.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\Interest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PosibleDeal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PossibleDeal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PriceList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\PriceListPositions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\Entities\ProductCart.cs" />

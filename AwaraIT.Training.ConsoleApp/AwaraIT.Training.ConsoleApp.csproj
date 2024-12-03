@@ -155,6 +155,7 @@
     <Compile Include="Actions\IntetestPluginAssignmentOnCreationTest.cs" />
     <Compile Include="Actions\Test1232.cs" />
     <Compile Include="Application.cs" />
+    <Compile Include="CalculatePricesBackUp.cs" />
     <Compile Include="Hellpers\DataForLogs.cs" />
     <Compile Include="Hellpers\PluginHelper.cs" />
     <Compile Include="Patern.cs" />

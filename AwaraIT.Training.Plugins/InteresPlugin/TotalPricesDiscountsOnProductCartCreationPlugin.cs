@@ -59,18 +59,12 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 QueryExpression query = new QueryExpression(ProductCart.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(ProductCart.Metadata.Price, ProductCart.Metadata.Discount, ProductCart.Metadata.PriceAfterDiscount),
-                    LinkEntities =
+                    Criteria = new FilterExpression
                     {
-                        new LinkEntity(ProductCart.EntityLogicalName, PossibleDealProductCartNN.EntityLogicalName, ProductCart.Metadata.ProductCartId, PossibleDealProductCartNN.Metadata.ProductCartId, JoinOperator.Inner)
-                        {
-                            LinkCriteria = new FilterExpression
-                            {
-                                Conditions =
-                                {
-                                    new ConditionExpression(PossibleDealProductCartNN.Metadata.PossibleDealId, ConditionOperator.Equal, possibleDealId)
-                                }
-                            }
-                        }
+                        Conditions =
+                       {
+                           new ConditionExpression(ProductCart.Metadata.PossibleDealReference, ConditionOperator.Equal, possibleDealId)
+                       }
                     }
                 };
 
@@ -84,11 +78,11 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 decimal totalPriceAfterDiscount = productCarts.Sum(pc => pc.PriceAfterDiscount?.Value ?? 0);
 
                 // Обновление сущности PossibleDeal
-                Entity possibleDeal = new Entity(PosibleDeal.EntityLogicalName, possibleDealId.Value)
+                Entity possibleDeal = new Entity(PossibleDeal.EntityLogicalName, possibleDealId.Value)
                 {
-                    [PosibleDeal.Metadata.Price] = new Money(totalBasePrice),
-                    [PosibleDeal.Metadata.Discount] = new Money(totalDiscount),
-                    [PosibleDeal.Metadata.PriceAfterDiscount] = new Money(totalPriceAfterDiscount)
+                    [PossibleDeal.Metadata.Price] = new Money(totalBasePrice),
+                    [PossibleDeal.Metadata.Discount] = new Money(totalDiscount),
+                    [PossibleDeal.Metadata.PriceAfterDiscount] = new Money(totalPriceAfterDiscount)
                 };
 
                 wrapper.Service.Update(possibleDeal);
@@ -108,27 +102,18 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// <returns>Идентификатор возможной сделки.</returns>
         private Guid? GetPossibleDealId(IOrganizationService service, Guid productCartId)
         {
-            QueryExpression query = new QueryExpression(PossibleDealProductCartNN.EntityLogicalName)
-            {
-                ColumnSet = new ColumnSet(PossibleDealProductCartNN.Metadata.PossibleDealId),
-                Criteria = new FilterExpression
-                {
-                    Conditions =
-                    {
-                        new ConditionExpression(PossibleDealProductCartNN.Metadata.ProductCartId, ConditionOperator.Equal, productCartId)
-                    }
-                }
-            };
 
-            var result = service.RetrieveMultiple(query).Entities.FirstOrDefault();
+            var productCart = service.Retrieve(ProductCart.EntityLogicalName, productCartId,
+                                               new ColumnSet(ProductCart.Metadata.PossibleDealReference)).ToEntity<ProductCart>();
 
-            if (result != null)
+            if (productCart != null && productCart.Contains(ProductCart.Metadata.PossibleDealReference))
             {
-                return result.ToEntity<PossibleDealProductCartNN>().PossibleDealId;
+                return productCart.PossibleDealReference.Id;
             }
 
             return null;
         }
+
 
     }
 }

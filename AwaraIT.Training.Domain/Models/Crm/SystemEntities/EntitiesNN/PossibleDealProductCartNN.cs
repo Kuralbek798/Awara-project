@@ -1,4 +1,4 @@
-﻿using Microsoft.Xrm.Sdk.Client;
+﻿/*using Microsoft.Xrm.Sdk.Client;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -71,3 +71,4 @@ namespace AwaraIT.Training.Domain.Models.Crm.SystemEntities
     }
 }
 
+*/
