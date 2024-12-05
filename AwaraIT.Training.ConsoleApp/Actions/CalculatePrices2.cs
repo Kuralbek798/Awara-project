@@ -64,10 +64,11 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             {
                 Console.WriteLine("Starting Execute method...");
 
-                var productCart = _service.Retrieve(ProductCart.EntityLogicalName, Guid.Parse("9bbbdbcb-84b1-ef11-b8e9-000d3a5c09a6"), new ColumnSet(true)).ToEntity<ProductCart>();
-                var possibleDealRef = productCart.PossibleDealReference;
-                var productRef = productCart.ProductReference;
-                var discount = productCart.Discount;
+                //var productCart = _service.Retrieve(ProductCart.EntityLogicalName, Guid.Parse("9bbbdbcb-84b1-ef11-b8e9-000d3a5c09a6"), new ColumnSet(true)).ToEntity<ProductCart>();
+                var possibleDealRef = new EntityReference("fnt_posible_deal", Guid.Parse("90E5FE56-79B1-EF11-B8E9-000D3A5C09A6"));
+                var productRef = new EntityReference("fnt_education_product", Guid.Parse("CB88AE4D-5EAA-EF11-B8E8-00224808BD77"));
+                //var productRef = productCart.ProductReference;
+                var discount = new Money(33);
 
                 if (possibleDealRef == null || productRef == null || discount == null)
                 {
@@ -125,11 +126,10 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 Console.WriteLine($"BasePrice: {basePrice.Value}");
                 Console.WriteLine($"DiscountedPrice: {discountedPrice.Value}");
 
-                if (context != null)
-                {
-                    BasePrice.Set(context, basePrice);
-                    DiscountedPrice.Set(context, discountedPrice);
-                }
+
+                BasePrice.Set(context, basePrice);
+                DiscountedPrice.Set(context, discountedPrice);
+                
             }
             catch (Exception ex)
             {

@@ -39,7 +39,8 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         /// <exception cref="Exception">Выбрасывается при возникновении ошибки во время выполнения плагина.</exception>
         public void CreatePossibleDeal(IContextWrapper wrapper)
         {
-            _log = new Logger(wrapper.Service);
+            var loggerArg = wrapper.Service;
+            _log = new Logger(loggerArg);
 
             var interest = wrapper.PreImage.ToEntity<Interest>();
             var target = wrapper.TargetEntity.ToEntity<Interest>();
