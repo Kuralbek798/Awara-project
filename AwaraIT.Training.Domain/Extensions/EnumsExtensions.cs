@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PriceList;
 
 namespace AwaraIT.Training.Domain.Extensions
 {
@@ -27,6 +28,10 @@ namespace AwaraIT.Training.Domain.Extensions
         /// <param name="status">Значение перечисления InterestStepStatus.</param>
         /// <returns>Целое число, представляющее значение перечисления.</returns>
         public static int ToIntValue(this InterestStepStatus status)
+        {
+            return (int)status;
+        }
+        public static int ToIntValue(this StateCodeEnum status)
         {
             return (int)status;
         }

@@ -63,17 +63,6 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         }
 
         /// <summary>
-        /// Перечисление: представляющее возможные статусы интереса.
-        /// </summary>
-        public enum InterestStepStatus
-        {
-            New = 797_720_001,
-            InProgress = 797_720_002,
-            Agreement = 797_720_003,
-            Refusal = 797_720_004
-        }
-
-        /// <summary>
         /// Свойство: Получает или задает идентификатор интереса.
         /// </summary>
         public Guid InterestId
@@ -169,6 +158,16 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         {
             get { return GetAttributeValue<EntityReference>(Metadata.OwnerId); }
             set { Attributes[Metadata.OwnerId] = value; }
+        }
+        /// <summary>
+        /// Перечисление: представляющее возможные статусы интереса.
+        /// </summary>
+        public enum InterestStepStatus
+        {
+            New = 797_720_001,
+            InProgress = 797_720_002,
+            Agreement = 797_720_003,
+            Refusal = 797_720_004
         }
     }
 }

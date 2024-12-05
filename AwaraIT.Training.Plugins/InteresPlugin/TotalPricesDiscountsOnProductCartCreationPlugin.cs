@@ -46,7 +46,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                     return;
                 }
 
-                // Получаем идентификатор возможной сделки из связи N:N
+
                 var possibleDealId = GetPossibleDealId(wrapper.Service, productCart.Id);
 
                 if (possibleDealId == null)

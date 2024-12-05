@@ -7,6 +7,8 @@ using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using System.Linq;
 using AwaraIT.Training.Application.Core;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.PriceList;
+using AwaraIT.Training.Domain.Extensions;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -117,21 +119,43 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 _log.INFO($"Format Conducting: {formatConducting}");
                 _log.INFO($"Subject Preparation: {subjectPreparation}");
 
-                // Запрос позиции прайс-листа
+
+
                 QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(PriceListPositions.Metadata.Price),
                     Criteria = new FilterExpression
                     {
                         Conditions =
-                             {
-                                 new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
-                                 new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, formatPreparation),
-                                 new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, formatConducting),
-                                 new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subjectPreparation)
-                             }
+                         {
+                            new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
+                            new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, formatPreparation),
+                            new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, formatConducting),
+                            new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subjectPreparation),
+                            new ConditionExpression(PriceList.Metadata.StateCode, ConditionOperator.Equal, StateCodeEnum.Active.ToIntValue() )
+                        }
                     }
                 };
+
+
+
+
+
+                // Запрос позиции прайс-листа
+                //QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
+                //{
+                //    ColumnSet = new ColumnSet(PriceListPositions.Metadata.Price),
+                //    Criteria = new FilterExpression
+                //    {
+                //        Conditions =
+                //             {
+                //                 new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
+                //                 new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, formatPreparation),
+                //                 new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, formatConducting),
+                //                 new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subjectPreparation)
+                //             }
+                //    }
+                //};
 
                 var result = service.RetrieveMultiple(query).Entities.FirstOrDefault()?.ToEntity<PriceListPositions>();
                 if (result == null)
