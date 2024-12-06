@@ -82,10 +82,10 @@ namespace AwaraIT.Kuralbek.Plugins
 
             try
             {
-                // Query to get users associated with the specified territory
+
                 var userQuery = new QueryExpression(User.EntityLogicalName)
                 {
-                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Field we want to retrieve
+                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId),
                     LinkEntities =
                     {
                         new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
@@ -107,7 +107,7 @@ namespace AwaraIT.Kuralbek.Plugins
                     }
                 };
 
-                // Execute the query and get the list of users
+
                 var userEntities = _service.RetrieveMultiple(userQuery).Entities;
 
                 var userIds = userEntities.Select(u => u.GetAttributeValue<Guid>(User.Metadata.SystemUserId)).ToList();

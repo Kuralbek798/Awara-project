@@ -13,27 +13,13 @@ namespace AwaraIT.Training.Domain.Extensions
     public static class EnumsExtensions
     {
         /// <summary>
-        /// Преобразует значение перечисления PossibleDealStepStatus в целое число.
+        /// Преобразует значение перечисления  в целое число.
         /// </summary>
-        /// <param name="status">Значение перечисления PossibleDealStepStatus.</param>
+        /// <param name="status">Значение перечисления .</param>
         /// <returns>Целое число, представляющее значение перечисления.</returns>
-        public static int ToIntValue(this PossibleDealStepStatus status)
+        public static int ToIntValue<T>(this T status) where T : Enum
         {
-            return (int)status;
-        }
-
-        /// <summary>
-        /// Преобразует значение перечисления InterestStepStatus в целое число.
-        /// </summary>
-        /// <param name="status">Значение перечисления InterestStepStatus.</param>
-        /// <returns>Целое число, представляющее значение перечисления.</returns>
-        public static int ToIntValue(this InterestStepStatus status)
-        {
-            return (int)status;
-        }
-        public static int ToIntValue(this StateCodeEnum status)
-        {
-            return (int)status;
+            return Convert.ToInt32(status);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
 {
     public class MetadataCheck
     {
-        private static IOrganizationService service; // Add this line to define the 'service' variable
+        private static IOrganizationService service; 
 
         public static void Run()
         {
