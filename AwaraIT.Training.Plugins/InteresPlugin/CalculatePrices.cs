@@ -15,7 +15,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
     /// <summary>
     /// Представляет настраиваемую активность рабочего процесса для расчета цен в CRM.
     /// </summary>
-    public class CalculatePrices : NativeActivity
+
+    public class CalculatePrices : NativeActivity //Не знаю почему но в CodeActivity не работает Logger поэтому использую NativeActivity
     {
         /// <summary>
         /// Получает или задает идентификатор возможной сделки.
