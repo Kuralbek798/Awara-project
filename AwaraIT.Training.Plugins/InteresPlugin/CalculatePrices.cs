@@ -163,7 +163,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 Money basePrice = result.Price;
                 _log.INFO($"Base price received {basePrice.Value}");
 
-                // Расчет скидки
+                // Расчет скидки.
                 Money discountedPrice = new Money(basePrice.Value - discount.Value);
                 _log.INFO($"Discounted price received {discountedPrice.Value}");
 
