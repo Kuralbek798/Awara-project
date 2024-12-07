@@ -145,8 +145,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                            Conditions =
                            {
                              new ConditionExpression(PriceList.Metadata.StateCode, ConditionOperator.Equal, StateCodeEnum.Active.ToIntValue()),
-                            // new ConditionExpression(PriceList.Metadata.PriceListEndDate, ConditionOperator.LessThan, DateTime.UtcNow),
-                            // это потом когда добавим поток для изменения статуса активности используя power ups можно как дополнительное условие добавить
+                             new ConditionExpression(PriceList.Metadata.PriceListEndDate, ConditionOperator.GreaterEqual, DateTime.UtcNow)
                            }
                          }
                        }

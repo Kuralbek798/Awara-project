@@ -33,8 +33,7 @@ function onProductOrDiscountChange(executionContext) {
 
     req.onreadystatechange = function () {
         // Проверяем, завершен ли запрос
-        // 0: Запрос еще не инициализирован. 1: Запрос был инициализирован. 2: Запрос получен.
-        // 3: Запрос в процессе обработки.4: Запрос завершен, и ответ полностью получен.
+
         if (this.readyState === 4) {
             // Проверяем, был ли запрос успешным
             if (this.status === 200) {
