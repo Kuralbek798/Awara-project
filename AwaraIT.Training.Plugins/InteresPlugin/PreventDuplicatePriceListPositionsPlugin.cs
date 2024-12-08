@@ -77,7 +77,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 if (results.Entities.Count > 0)
                 {
                     _log.ERROR("A price list position with the same combination already exists.");
-                    throw new InvalidPluginExecutionException("Прайс-лист с подобными данными уже присутствует в таблице, измените входные параметры вашего прайс-листа");
+                    throw new InvalidPluginExecutionException("Error Duplicate!");
                 }
             }
             catch (Exception ex)

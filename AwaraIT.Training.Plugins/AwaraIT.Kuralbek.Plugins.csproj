@@ -148,6 +148,7 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="Scripts\priceInPriceOut.js" />
+    <Content Include="Scripts\priceListPositionsDuplicateAlert.js" />
   </ItemGroup>
   <Import Project="..\AwaraIT.Training.Domain\AwaraIT.Training.Domain.projitems" Label="Shared" />
   <Import Project="..\AwaraIT.Training.Infrastucture\AwaraIT.Training.Infrastucture.projitems" Label="Shared" />
