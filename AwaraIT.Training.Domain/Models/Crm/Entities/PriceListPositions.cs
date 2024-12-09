@@ -44,6 +44,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
             /// Логическое имя: Ссылка на формат проведения.
             /// </summary>
             public const string FormatConductionReference = "fnt_format_condaction";
+
             /// <summary>
             /// Логическое имя: Цена.
             /// </summary>

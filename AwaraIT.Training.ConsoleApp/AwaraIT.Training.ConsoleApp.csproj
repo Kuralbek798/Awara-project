@@ -152,6 +152,7 @@
     <Compile Include="Actions\LinqMultipleRetrieve.cs" />
     <Compile Include="Actions\MetadataCheck.cs" />
     <Compile Include="Actions\PossibleDealLessBusyUserAssignmentPluginTest.cs" />
+    <Compile Include="Actions\PreventDuplicatePriceListPositionsPluginTest.cs" />
     <Compile Include="Actions\ProductBasketPriceCalculationPlugin.cs" />
     <Compile Include="Actions\IntetestPluginAssignmentOnCreationTest.cs" />
     <Compile Include="Application.cs" />

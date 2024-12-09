@@ -14,7 +14,8 @@ namespace AwaraIT.Kuralbek.Plugins
             //IntetestPluginAssignmentOnCreationTest.Run();
             //ProductBasketPriceCalculationPlugin.Run();
             // PossibleDealLessBusyUserAssignmentPluginTest.Run();
-            CalculatePrices2.Run();
+            // CalculatePrices2.Run();
+            PreventDuplicatePriceListPositionsPluginTest.Run();
 
             /*     try
                  {

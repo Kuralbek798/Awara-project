@@ -57,7 +57,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// <summary>
         /// Выполняет настраиваемую активность рабочего процесса для расчета цен.
         /// </summary>
-        /// <param name="context">Контекст выполнения.</param>
+        /// <param name="context">Контекст выполнения.</param>     
         protected override void Execute(NativeActivityContext context)
         {
             var workflowContext = context.GetExtension<IWorkflowContext>();

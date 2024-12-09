@@ -121,27 +121,6 @@ namespace AwaraIT.Kuralbek.Plugins
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }
 

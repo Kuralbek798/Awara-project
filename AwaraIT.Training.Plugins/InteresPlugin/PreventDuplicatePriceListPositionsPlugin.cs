@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using Microsoft.Xrm.Sdk.Messages;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
@@ -54,6 +55,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 var preparationFormat = entity.FormatPreparationReference?.Id;
                 var conductingFormat = entity.FormatConductionReference?.Id;
                 var subject = entity.SubjectReference?.Id;
+                var priceList = entity.PriceListReference?.Id;
 
                 var query = new QueryExpression(PriceListPositions.EntityLogicalName)
                 {
@@ -68,7 +70,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                             new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territory),
                             new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, preparationFormat),
                             new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, conductingFormat),
-                            new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subject)
+                            new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subject),
+                             new ConditionExpression(PriceListPositions.Metadata.PriceListReference,ConditionOperator.Equal, priceList)
                         }
                     }
                 };
@@ -77,7 +80,13 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 if (results.Entities.Count > 0)
                 {
                     _log.ERROR("A price list position with the same combination already exists.");
-                    throw new InvalidPluginExecutionException("Error Duplicate!");
+                    // Вызов Action для передачи параметров ошибки
+                    var request = new OrganizationRequest("new_priceListPositionsDuplicateInfo")
+                    {
+                        ["ErrorMessage"] = "Error Duplicate!"
+                    };
+                    wrapper.Service.Execute(request);
+                    //throw new Exception("Error Duplicate!") { HResult };
                 }
             }
             catch (Exception ex)
@@ -88,4 +97,6 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         }
     }
 }
+
+
 
