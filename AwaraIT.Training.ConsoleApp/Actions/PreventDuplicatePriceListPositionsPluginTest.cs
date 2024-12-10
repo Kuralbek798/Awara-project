@@ -79,9 +79,9 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 {
                     _log.ERROR("A price list position with the same combination already exists.");
                     // Вызов Action для передачи параметров ошибки
-                    var request = new OrganizationRequest("new_priceListPositionsDuplicateInfo")
+                    var request = new OrganizationRequest("fnt_priceListPositionsDuplicateInfo")
                     {
-                        ["ErrorMessage"] = "Error Duplicate!"
+                        ["InputErrorMessage"] = "Error Duplicate!"
                     };
                     var sdf = _service.Execute(request);
                     Console.WriteLine(sdf);
@@ -95,9 +95,6 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(Execute)} method of {nameof(Execute)}.", ex);
             }
         }
-
-
-
 
     }
 }

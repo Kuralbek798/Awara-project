@@ -1,33 +1,20 @@
 ﻿function handleSaveError(executionContext) {
-    var req = new XMLHttpRequest();
-    req.open("POST", Xrm.Page.context.getClientUrl() + "/api/data/v9.0/fnt_priceListPositionsDuplicateInfo", true);
-    req.setRequestHeader("OData-MaxVersion", "4.0");
-    req.setRequestHeader("OData-Version", "4.0");
-    req.setRequestHeader("Accept", "application/json"); //Accept-  json
-    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-    req.setRequestHeader("Prefer", "return=representation");
+    var eventArgs = executionContext.getEventArgs();
 
-    req.onreadystatechange = function () {
+    var error = eventArgs.getError();
+    if (error) {
+        var errorMessage = error.message;
+        var errorCode = error.errorCode;
 
-        if (this.readyState === 4) {
-
-            if (this.status === 200) {
-                var result = JSON.parse(this.response);
-                var errorMessage = result.ErrorMessage;
-                if (errorMessage !== null && errorMessage === "Error Duplicate!") {
-
-                    showInfo(errorMessage)
-                }
-                console.log("[handleSaveError] errorMessage:", errorMessage);
-            } else {
-                console.error("[handleSaveError] Request failed with status:", this.status);
-                console.error("[handleSaveError] Error response:", this.response);
-            }
+        if (errorCode === 1001) {
+            showInfo(errorMessage);
+            eventArgs.preventDefault(); // Предотвращение сохранения
         }
-    };
+        console.log("[handleSaveError] errorMessage:", errorMessage);
+    } else {
+        console.error("[handleSaveError] No error information available.");
+    }
 
-    console.log("[MyScript] Sending API request...");
-    req.send(JSON.stringify());
 }
 
 function showInfo(errorMessage) {
@@ -44,6 +31,3 @@ function showInfo(errorMessage) {
         }
     );
 }
-
-
-

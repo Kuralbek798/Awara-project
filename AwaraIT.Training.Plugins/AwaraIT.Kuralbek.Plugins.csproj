@@ -109,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Hellpers\DataForLogs.cs" />
+    <Compile Include="Hellpers\DuplicatePriceListPositionException.cs" />
     <Compile Include="Hellpers\MappingProfile.cs" />
     <Compile Include="Hellpers\PluginHelper.cs" />
     <Compile Include="InteresPlugin\CalculatePrices.cs" />

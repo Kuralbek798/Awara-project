@@ -63,11 +63,11 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             var workflowContext = context.GetExtension<IWorkflowContext>();
             var serviceFactory = context.GetExtension<IOrganizationServiceFactory>();
             var service = serviceFactory.CreateOrganizationService(workflowContext.UserId);
-            var tracingService = context.GetExtension<ITracingService>();
+
 
             _log = new Logger(service);
             _log.INFO("CalculatePrices started");
-            tracingService.Trace("CalculatePrices started");
+
 
             // Получение входных параметров
             var dealEntityReference = PossibleDealId.Get(context);
@@ -82,9 +82,9 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
                 if (dealEntityReference == null || productReference == null || discount == null)
                 {
-                    _log.ERROR("Один или несколько входных параметров равны null");
-                    tracingService.Trace("Один или несколько входных параметров равны null");
-                    throw new InvalidPluginExecutionException("Один или несколько входных параметров равны null");
+                    _log.ERROR("One or some incoming parameters are null");
+
+                    throw new InvalidPluginExecutionException("One or some incoming parameters are null");
                 }
 
                 // Запрос информации о сделке
@@ -95,9 +95,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
                 if (territoryReference == null || territoryReference.Id == Guid.Empty)
                 {
-                    _log.ERROR($"Ошибка в customStep {nameof(CalculatePrices)}: территория равна null");
-                    tracingService.Trace($"Ошибка в customStep {nameof(CalculatePrices)}: территория равна null");
-                    throw new InvalidPluginExecutionException("Не удалось получить территорию из возможной сделки");
+                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: territory is null");
+                    throw new InvalidPluginExecutionException("failed to receive territory from possible deaal");
                 }
 
                 // Запрос информации о продукте
@@ -107,9 +106,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                                                                    Product.Metadata.SubjectPreparationReference)).ToEntity<Product>();
                 if (productEntity == null)
                 {
-                    _log.ERROR($"Ошибка в customStep {nameof(CalculatePrices)}: информация о продукте равна null");
-                    tracingService.Trace($"Ошибка в customStep {nameof(CalculatePrices)}: информация о продукте равна null");
-                    throw new InvalidPluginExecutionException("Информация о продукте равна null");
+                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: product information is null");
+                    throw new InvalidPluginExecutionException("product information is null");
                 }
 
                 var formatPreparation = productEntity.FormatPreparationReference?.Id;
@@ -156,9 +154,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
                 if (result == null)
                 {
-                    _log.ERROR($"Ошибка в customStep {nameof(CalculatePrices)}: нет данных в прайс-листе.");
-                    tracingService.Trace("Нет данных в прайс-листе.");
-                    throw new InvalidPluginExecutionException("Нет данных в прайс-листе.");
+                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: no data in price-list");
+                    throw new InvalidPluginExecutionException("no data in price-list");
                 }
                 Money basePrice = result.Price;
                 _log.INFO($"Base price received {basePrice.Value}");
@@ -175,8 +172,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             }
             catch (Exception ex)
             {
-                _log.ERROR(ex, $"Ошибка в customStep {nameof(CalculatePrices)}");
-                throw new InvalidPluginExecutionException("Исключение при расчете общей цены: " + ex.Message, ex);
+                _log.ERROR(ex, $"Error in customStep {nameof(CalculatePrices)}");
+                throw new InvalidPluginExecutionException("There is an exception on calculating total price: " + ex.Message, ex);
             }
         }
     }

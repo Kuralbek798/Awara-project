@@ -7,6 +7,7 @@ using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Enums;
 using AwaraIT.Training.Application.Core;
+using AwaraIT.Kuralbek.Plugins.Hellpers;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -80,13 +81,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 if (results.Entities.Count > 0)
                 {
                     _log.ERROR("A price list position with the same combination already exists.");
-                    // Вызов Action для передачи параметров ошибки
-                    var request = new OrganizationRequest("new_priceListPositionsDuplicateInfo")
-                    {
-                        ["ErrorMessage"] = "Error Duplicate!"
-                    };
-                    wrapper.Service.Execute(request);
-                    //throw new Exception("Error Duplicate!") { HResult };
+                    throw new DuplicatePriceListPositionException("A price list position with the same combination already exists.", 1001);
                 }
             }
             catch (Exception ex)
