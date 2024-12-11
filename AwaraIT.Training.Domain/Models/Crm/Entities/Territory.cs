@@ -22,7 +22,7 @@ namespace AwaraIT.Training.Domain.Models.Crm.Entities
         public static class Metadata
         {
             /// <summary>
-            /// Логическое имя: имя территории.
+            /// Логическое имя:  территории.
             /// </summary>
             public const string TerritoryName = "fnt_territory_name";
 

@@ -9,6 +9,7 @@ using System.Linq;
 using AwaraIT.Training.Application.Core;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PriceList;
 using AwaraIT.Training.Domain.Extensions;
+using AwaraIT.Kuralbek.Plugins.Helpers;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -70,34 +71,29 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
 
             // Получение входных параметров
-            var dealEntityReference = PossibleDealId.Get(context);
+            var possibleDealReference = PossibleDealId.Get(context);
             var productReference = ProductId.Get(context);
             var discount = Discount.Get(context);
 
             try
             {
-                _log.INFO($"CalculatePrices dealEntityReference received: {dealEntityReference?.Id}");
+
+                _log.INFO($"CalculatePrices possibleDealReference received: {possibleDealReference?.Id}");
                 _log.INFO($"CalculatePrices productReference received: {productReference?.Id}");
                 _log.INFO($"CalculatePrices discount received: {discount?.Value}");
 
-                if (dealEntityReference == null || productReference == null || discount == null)
+                if (possibleDealReference == null || productReference == null || discount == null)
                 {
                     _log.ERROR("One or some incoming parameters are null");
 
                     throw new InvalidPluginExecutionException("One or some incoming parameters are null");
                 }
-
-                // Запрос информации о сделке
-                var possibleDeal = service.Retrieve(dealEntityReference.LogicalName, dealEntityReference.Id,
-                                                    new ColumnSet(PossibleDeal.Metadata.TerritoryReference)).ToEntity<PossibleDeal>();
-                var territoryReference = possibleDeal.TerritoryReference;
+                var columnSet = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
+                var territoryReference = PluginHelper.ValidateEntityReference(GetPossibleDeal(service, possibleDealReference, columnSet).ToEntity<PossibleDeal>().TerritoryReference);
                 _log.INFO($"Territory Reference received: {territoryReference?.Id}");
 
-                if (territoryReference == null || territoryReference.Id == Guid.Empty)
-                {
-                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: territory is null");
-                    throw new InvalidPluginExecutionException("failed to receive territory from possible deaal");
-                }
+                // Запрос информации о сделке
+
 
                 // Запрос информации о продукте
                 var productEntity = service.Retrieve(productReference.LogicalName, productReference.Id,
@@ -176,8 +172,26 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 throw new InvalidPluginExecutionException("There is an exception on calculating total price: " + ex.Message, ex);
             }
         }
+
+        private Entity GetPossibleDeal(IOrganizationService service, EntityReference entityReference, ColumnSet columnSet)
+        {
+            try
+            {
+                entityReference = PluginHelper.ValidateEntityReference(entityReference);
+
+                var possibleDeal = service.Retrieve(entityReference.LogicalName, entityReference.Id, columnSet);
+                return possibleDeal;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
     }
 }
+
 
 
 

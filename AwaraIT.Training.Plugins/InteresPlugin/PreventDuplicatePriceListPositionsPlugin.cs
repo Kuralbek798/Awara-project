@@ -72,7 +72,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                             new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, preparationFormat),
                             new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, conductingFormat),
                             new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subject),
-                             new ConditionExpression(PriceListPositions.Metadata.PriceListReference,ConditionOperator.Equal, priceList)
+                            new ConditionExpression(PriceListPositions.Metadata.PriceListReference,ConditionOperator.Equal, priceList)
                         }
                     }
                 };

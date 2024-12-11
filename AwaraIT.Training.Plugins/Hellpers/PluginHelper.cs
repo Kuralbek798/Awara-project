@@ -10,6 +10,7 @@ using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using AwaraIT.Training.Domain.Extensions;
+using AwaraIT.Kuralbek.Plugins.Plugin;
 
 
 namespace AwaraIT.Kuralbek.Plugins.Helpers
@@ -119,6 +120,136 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             return conditions;
 
         }
+
+        public static EntityReference ValidateEntityReference(EntityReference entityReference)
+        {
+            try
+            {
+                if (entityReference == null)
+                {
+                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} EntityReference is Null!");
+                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} EntityReference is Null!");
+                }
+
+                if (entityReference.Id == Guid.Empty)
+                {
+                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.Id is Empty!");
+                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.Id is Empty!");
+                }
+
+                if (string.IsNullOrWhiteSpace(entityReference.LogicalName))
+                {
+                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.LogicalName is Null or Empty!");
+                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.LogicalName is Null or Empty!");
+                }
+
+                return entityReference;
+            }
+            catch (Exception ex)
+            {
+                _log.ERROR($"Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)}: {ex.Message}");
+                throw new Exception($"Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)}", ex);
+            }
+        }
+
+        public static ColumnSet CreateColumnSet(params string[] attributeNames)
+        {
+            ValidateAttributeNames(attributeNames);
+            return new ColumnSet(attributeNames);
+        }
+
+        private static void ValidateAttributeNames(string[] attributeNames)
+        {
+            if (attributeNames == null)
+            {
+                throw new ArgumentNullException(nameof(attributeNames), "Attribute names array cannot be null.");
+            }
+
+            if (attributeNames.Length == 0)
+            {
+                throw new ArgumentException("Attribute names array cannot be empty.", nameof(attributeNames));
+            }
+
+            foreach (var attributeName in attributeNames)
+            {
+                if (string.IsNullOrWhiteSpace(attributeName))
+                {
+                    throw new ArgumentException("Attribute names cannot be null, empty, or consist only of white-space characters.", nameof(attributeNames));
+                }
+            }
+        }
+
     }
 }
 
+
+
+
+
+/*using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
+using Microsoft.Xrm.Sdk.Query;
+using Microsoft.Xrm.Sdk;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AwaraIT.Training.Application.Core;
+using AwaraIT.Training.Domain.Models.Crm.Entities;
+using AwaraIT.Training.Domain.Models.Crm;
+using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
+using AwaraIT.Training.Domain.Extensions;
+using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
+
+namespace AwaraIT.Kuralbek.Plugins.Hellpers
+{
+    public static class PluginHelper
+    {
+        private static Logger _log;
+        public static Entity GetLeastLoadedUser(IContextWrapper wrapper, List<Guid> usersId)
+        {
+            try
+            {
+                var loadQuery = new QueryExpression(Interest.EntityLogicalName)
+                {
+                    ColumnSet = new ColumnSet(EntityCommon.OwnerId),
+                    Criteria = new FilterExpression
+                    {
+                        FilterOperator = LogicalOperator.And,
+                        Conditions =
+                        {
+                            new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
+                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
+                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.New.ToIntValue()),
+                        }
+                    },
+
+                };
+
+                // Получаем записи интересов
+                var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;//.Select(e => e.ToEntity<Interest>());
+
+                // Подсчитываем интересы для каждого пользователя
+                var userLoadCounts = interestRecords
+                  .GroupBy(rec => rec.ToEntity<Interest>().OwnerId.ProductCartId)
+                  .ToDictionary(g => g.Key, g => g.Count());
+
+                //Получаем пользователя с наименьшей нагрузкой
+                var leastLoadedUserId = userLoadCounts
+                  .OrderBy(entry => entry.Value)
+                  .FirstOrDefault().Key;
+
+                //  _log.INFO($"{_teamName} {DataForLogs.GetDataStringFromDictionary(userLoadCounts)}");
+                _log.INFO($"Less loaded user ID:{leastLoadedUserId}");
+
+                return new Entity(User.EntityLogicalName, leastLoadedUserId);
+            }
+            catch (Exception ex)
+            {
+                _log.ERROR($"Ошибка в {nameof(GetLeastLoadedUser)} {ex.Message}, {ex}");
+                throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
+            }
+        }
+    }
+}
+*/
