@@ -11,6 +11,9 @@ using AwaraIT.Training.Domain.Models.Crm.Entities;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Kuralbek.Plugins.Plugin;
+using System.Runtime.ExceptionServices;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 
 namespace AwaraIT.Kuralbek.Plugins.Helpers
@@ -121,64 +124,66 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 
         }
 
-        public static EntityReference ValidateEntityReference(EntityReference entityReference)
+        public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName)
         {
             try
             {
                 if (entityReference == null)
                 {
-                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} EntityReference is Null!");
-                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} EntityReference is Null!");
+                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
+                    throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
                 }
 
                 if (entityReference.Id == Guid.Empty)
                 {
-                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.Id is Empty!");
-                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.Id is Empty!");
+                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
+                    throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
                 }
 
                 if (string.IsNullOrWhiteSpace(entityReference.LogicalName))
                 {
-                    _log.ERROR($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.LogicalName is Null or Empty!");
-                    throw new ArgumentNullException($" Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)} entityReference.LogicalName is Null or Empty!");
+                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
+                    throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
                 }
 
                 return entityReference;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)}: {ex.Message}");
-                throw new Exception($"Exception in plugin {nameof(CalculatePrices)} in {nameof(ValidateEntityReference)}", ex);
+                _log.ERROR($"Exception in plugin {pluginName} in {parameterName}: {ex.Message}");
+                throw new Exception($"Exception in plugin {pluginName} in {parameterName}", ex);
+            }
+        }
+
+        // Method for validating multiple entityReferences with tuples in parallel
+        public static void ValidateEntityReferencesWithTuples(params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
+        {
+            var exceptions = new ConcurrentBag<Exception>();
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+
+            Parallel.ForEach(entityReferencesAttributesInfo, parallelOptions, attribute =>
+            {
+                try
+                {
+                    ValidateEntityReference(attribute.entityReference, attribute.pluginName, attribute.parameterName);
+                }
+                catch (Exception ex)
+                {
+
+                    exceptions.Add(ex);
+                }
+
+            });
+            if (exceptions.Any())
+            {
+                throw new AggregateException("Exceptions in ValidateEntityReferencesWithTuples", exceptions);
             }
         }
 
         public static ColumnSet CreateColumnSet(params string[] attributeNames)
         {
-            ValidateAttributeNames(attributeNames);
             return new ColumnSet(attributeNames);
         }
-
-        private static void ValidateAttributeNames(string[] attributeNames)
-        {
-            if (attributeNames == null)
-            {
-                throw new ArgumentNullException(nameof(attributeNames), "Attribute names array cannot be null.");
-            }
-
-            if (attributeNames.Length == 0)
-            {
-                throw new ArgumentException("Attribute names array cannot be empty.", nameof(attributeNames));
-            }
-
-            foreach (var attributeName in attributeNames)
-            {
-                if (string.IsNullOrWhiteSpace(attributeName))
-                {
-                    throw new ArgumentException("Attribute names cannot be null, empty, or consist only of white-space characters.", nameof(attributeNames));
-                }
-            }
-        }
-
     }
 }
 

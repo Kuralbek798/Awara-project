@@ -34,9 +34,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\EntitiesNN\TerritoryTeamNN.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\User.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\Team.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\IRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Repository.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Models\Crm\SystemEntities\EntitiesNN\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Repositories\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Models\Support\" />
   </ItemGroup>
 </Project>

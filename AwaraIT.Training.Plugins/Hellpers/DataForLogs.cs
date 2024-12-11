@@ -1,6 +1,8 @@
-﻿using System;
+﻿using AwaraIT.Training.Application.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,6 +31,27 @@ namespace AwaraIT.Kuralbek.Plugins.Hellpers
         public static string GetDataStringFromDictionary(Dictionary<Guid, int> data)
         {
             return string.Join(", ", data.Select(entry => $"key: {entry.Key} : value: {entry.Value}"));
+        }
+
+        public static void SaveInputParametersLogs(Logger log, params string[] info)
+        {
+            if (info.Length > 0)
+            {
+                log.INFO($"possibleDealReference received: {info[0]}");
+                log.INFO($"productReference received: {info[1]}");
+                log.INFO($"discount received: {info[2]}");
+
+            }
+        }
+        public static void SaveProductDeatailsLogs(Logger log, params string[] info)
+        {
+            if (info.Length > 0)
+            {
+                log.INFO($"formatPreparationId received: {info[0]}");
+                log.INFO($"formatConductingId received: {info[1]}");
+                log.INFO($"subjectPreparationId received: {info[2]}");
+
+            }
         }
     }
 }

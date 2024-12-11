@@ -10,6 +10,8 @@ using AwaraIT.Training.Application.Core;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PriceList;
 using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Kuralbek.Plugins.Helpers;
+using AwaraIT.Training.Domain.Repositories;
+using AwaraIT.Kuralbek.Plugins.Hellpers;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -54,6 +56,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         public OutArgument<Money> DiscountedPrice { get; set; }
 
         private Logger _log;
+        private EntityReference territoryReference;
 
         /// <summary>
         /// Выполняет настраиваемую активность рабочего процесса для расчета цен.
@@ -64,9 +67,13 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             var workflowContext = context.GetExtension<IWorkflowContext>();
             var serviceFactory = context.GetExtension<IOrganizationServiceFactory>();
             var service = serviceFactory.CreateOrganizationService(workflowContext.UserId);
-
-
             _log = new Logger(service);
+            IRepository repository = new Repository(service, _log);
+
+
+
+
+
             _log.INFO("CalculatePrices started");
 
 
@@ -77,42 +84,18 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
             try
             {
-
-                _log.INFO($"CalculatePrices possibleDealReference received: {possibleDealReference?.Id}");
-                _log.INFO($"CalculatePrices productReference received: {productReference?.Id}");
-                _log.INFO($"CalculatePrices discount received: {discount?.Value}");
-
-                if (possibleDealReference == null || productReference == null || discount == null)
-                {
-                    _log.ERROR("One or some incoming parameters are null");
-
-                    throw new InvalidPluginExecutionException("One or some incoming parameters are null");
-                }
-                var columnSet = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
-                var territoryReference = PluginHelper.ValidateEntityReference(GetPossibleDeal(service, possibleDealReference, columnSet).ToEntity<PossibleDeal>().TerritoryReference);
+                // validate input parameters
+                PluginHelper.ValidateEntityReferencesWithTuples((possibleDealReference, nameof(CalculatePrices), nameof(possibleDealReference)), (productReference, nameof(CalculatePrices), nameof(productReference)));
+                DataForLogs.SaveInputParametersLogs(_log, possibleDealReference.Id.ToString(), productReference.Id.ToString(), discount.Value.ToString());
+                // get territory reference
+                territoryReference = GetTerritoryReference(possibleDealReference, repository);
                 _log.INFO($"Territory Reference received: {territoryReference?.Id}");
 
-                // Запрос информации о сделке
-
-
                 // Запрос информации о продукте
-                var productEntity = service.Retrieve(productReference.LogicalName, productReference.Id,
-                                                     new ColumnSet(Product.Metadata.FormatPreparationReference,
-                                                                   Product.Metadata.FormatConductionReference,
-                                                                   Product.Metadata.SubjectPreparationReference)).ToEntity<Product>();
-                if (productEntity == null)
-                {
-                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: product information is null");
-                    throw new InvalidPluginExecutionException("product information is null");
-                }
 
-                var formatPreparation = productEntity.FormatPreparationReference?.Id;
-                var formatConducting = productEntity.FormatConductionReference?.Id;
-                var subjectPreparation = productEntity.SubjectPreparationReference?.Id;
 
-                _log.INFO($"Format Preparation: {formatPreparation}");
-                _log.INFO($"Format Conducting: {formatConducting}");
-                _log.INFO($"Subject Preparation: {subjectPreparation}");
+                var productInfo = GetProductDetailsGuids(productReference, repository);
+                DataForLogs.SaveProductDeatailsLogs(_log, productInfo.formatPreparationId.ToString(), productInfo.formatConductingId.ToString(), productInfo.subjectPreparationId.ToString());
 
                 // Запрос к прайс-листу
                 QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
@@ -124,9 +107,9 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                         Conditions =
                         {
                           new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
-                          new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, formatPreparation),
-                          new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, formatConducting),
-                          new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, subjectPreparation)
+                          new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, productInfo.formatPreparationId),
+                          new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, productInfo.formatConductingId),
+                          new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, productInfo.subjectPreparationId)
                         },
                     },
                     LinkEntities =
@@ -173,19 +156,43 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             }
         }
 
-        private Entity GetPossibleDeal(IOrganizationService service, EntityReference entityReference, ColumnSet columnSet)
+        private EntityReference GetTerritoryReference(EntityReference possibleDealReference, IRepository repository)
         {
             try
             {
-                entityReference = PluginHelper.ValidateEntityReference(entityReference);
+                // create column set for possible deal
+                var columnSetForPossibleDeal = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
+                // get territory reference from possible deal
+                territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
+                // validate territory reference
+                territoryReference = PluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices), nameof(territoryReference));
 
-                var possibleDeal = service.Retrieve(entityReference.LogicalName, entityReference.Id, columnSet);
-                return possibleDeal;
+                return territoryReference;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _log.ERROR($"Error in GetTrritoryReference: {ex.Message}");
+                throw ex;
             }
+        }
+
+        private (Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId) GetProductDetailsGuids(EntityReference productReference, IRepository repository)
+        {
+            //create column set for product
+            var columnSetForProduct = PluginHelper.CreateColumnSet(Product.Metadata.FormatPreparationReference,
+                                                                   Product.Metadata.FormatConductionReference,
+                                                                   Product.Metadata.SubjectPreparationReference);
+            // get product information
+            var productEntity = repository.GetEntityDataByReference(productReference, columnSetForProduct).ToEntity<Product>();
+            // validate product information
+            var formatPreparation = productEntity.FormatPreparationReference;
+            var formatConducting = productEntity.FormatConductionReference;
+            var subjectPreparation = productEntity.SubjectPreparationReference;
+            PluginHelper.ValidateEntityReferencesWithTuples((formatPreparation, nameof(CalculatePrices), nameof(formatPreparation)),
+                                                            (formatConducting, nameof(CalculatePrices), nameof(formatConducting)),
+                                                            (subjectPreparation, nameof(CalculatePrices), nameof(subjectPreparation)));
+
+            return (formatPreparation.Id, formatConducting.Id, subjectPreparation.Id);
         }
 
 
