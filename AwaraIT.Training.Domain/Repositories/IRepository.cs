@@ -9,5 +9,6 @@ namespace AwaraIT.Training.Domain.Repositories
     public interface IRepository
     {
         Entity GetEntityDataByReference(EntityReference entityReference, ColumnSet columnSet);
+        EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId);
     }
 }

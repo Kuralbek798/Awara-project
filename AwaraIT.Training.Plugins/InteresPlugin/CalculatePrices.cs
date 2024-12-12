@@ -18,7 +18,6 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
     /// <summary>
     /// Представляет настраиваемую активность рабочего процесса для расчета цен в CRM.
     /// </summary>
-
     public class CalculatePrices : NativeActivity //Не знаю почему но в CodeActivity не работает Logger поэтому использую NativeActivity
     {
         /// <summary>
@@ -68,86 +67,39 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             var serviceFactory = context.GetExtension<IOrganizationServiceFactory>();
             var service = serviceFactory.CreateOrganizationService(workflowContext.UserId);
             _log = new Logger(service);
-            IRepository repository = new Repository(service, _log);
-
-
-
-
-
+            IRepository repository = new Repository(service);
             _log.INFO("CalculatePrices started");
-
-
-            // Получение входных параметров
-            var possibleDealReference = PossibleDealId.Get(context);
-            var productReference = ProductId.Get(context);
-            var discount = Discount.Get(context);
 
             try
             {
-                // validate input parameters
-                PluginHelper.ValidateEntityReferencesWithTuples((possibleDealReference, nameof(CalculatePrices), nameof(possibleDealReference)), (productReference, nameof(CalculatePrices), nameof(productReference)));
+                // Get input parameters
+                var possibleDealReference = PossibleDealId.Get(context);
+                var productReference = ProductId.Get(context);
+                var discount = Discount.Get(context);
+
+                // Validate input parametera
+                PluginHelper.ValidateEntityReferencesWithTuples(
+                    (possibleDealReference, nameof(CalculatePrices), nameof(possibleDealReference)),
+                    (productReference, nameof(CalculatePrices), nameof(productReference))
+                );
                 DataForLogs.SaveInputParametersLogs(_log, possibleDealReference.Id.ToString(), productReference.Id.ToString(), discount.Value.ToString());
-                // get territory reference
+
+                // Get territory reference
                 territoryReference = GetTerritoryReference(possibleDealReference, repository);
                 _log.INFO($"Territory Reference received: {territoryReference?.Id}");
 
-                // Запрос информации о продукте
-
-
+                // Get product details
                 var productInfo = GetProductDetailsGuids(productReference, repository);
                 DataForLogs.SaveProductDeatailsLogs(_log, productInfo.formatPreparationId.ToString(), productInfo.formatConductingId.ToString(), productInfo.subjectPreparationId.ToString());
 
-                // Запрос к прайс-листу
-                QueryExpression query = new QueryExpression(PriceListPositions.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(PriceListPositions.Metadata.Price),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                        Conditions =
-                        {
-                          new ConditionExpression(PriceListPositions.Metadata.TerritoryReference, ConditionOperator.Equal, territoryReference.Id),
-                          new ConditionExpression(PriceListPositions.Metadata.FormatPreparationReference, ConditionOperator.Equal, productInfo.formatPreparationId),
-                          new ConditionExpression(PriceListPositions.Metadata.FormatConductionReference, ConditionOperator.Equal, productInfo.formatConductingId),
-                          new ConditionExpression(PriceListPositions.Metadata.SubjectReference, ConditionOperator.Equal, productInfo.subjectPreparationId)
-                        },
-                    },
-                    LinkEntities =
-                    {
-                       new LinkEntity(PriceListPositions.EntityLogicalName, PriceList.EntityLogicalName, PriceListPositions.Metadata.PriceListReference, PriceList.Metadata.PriceListId, JoinOperator.Inner)
-                       {
-                         LinkCriteria = new FilterExpression
-                         {
-                            FilterOperator = LogicalOperator.And,
-                           Conditions =
-                           {
-                             new ConditionExpression(PriceList.Metadata.StateCode, ConditionOperator.Equal, StateCodeEnum.Active.ToIntValue()),
-                             new ConditionExpression(PriceList.Metadata.PriceListEndDate, ConditionOperator.GreaterEqual, DateTime.UtcNow)
-                           }
-                         }
-                       }
-                    }
-                };
+                // Get Base Price
+                Money basePrice = GetBasePrice(territoryReference.Id, productInfo.formatPreparationId, productInfo.formatConductingId, productInfo.subjectPreparationId, repository);
 
-                var result = service.RetrieveMultiple(query).Entities.FirstOrDefault()?.ToEntity<PriceListPositions>();
+                // Calculate Discounted Price
+                Money discountedPrice = CalculateDiscountedPrice(basePrice, discount);
 
-                if (result == null)
-                {
-                    _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: no data in price-list");
-                    throw new InvalidPluginExecutionException("no data in price-list");
-                }
-                Money basePrice = result.Price;
-                _log.INFO($"Base price received {basePrice.Value}");
-
-                // Расчет скидки.
-                Money discountedPrice = new Money(basePrice.Value - discount.Value);
-                _log.INFO($"Discounted price received {discountedPrice.Value}");
-
-                // Установка выходных параметров
-                BasePrice.Set(context, basePrice);
-                DiscountedPrice.Set(context, discountedPrice);
-                _log.INFO($"BasePrice {BasePrice.Get(context)?.Value}, DiscountedPrice {DiscountedPrice.Get(context)?.Value}");
-
+                // Set prices to output parameters
+                SetPricesToOutputParameters(basePrice, discountedPrice, context);
             }
             catch (Exception ex)
             {
@@ -156,51 +108,107 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             }
         }
 
+        /// <summary>
+        /// Получает ссылку на территорию из возможной сделки.
+        /// </summary>
+        /// <param name="possibleDealReference">Ссылка на возможную сделку.</param>
+        /// <param name="repository">Репозиторий для доступа к данным.</param>
+        /// <returns>Ссылка на территорию.</returns>
         private EntityReference GetTerritoryReference(EntityReference possibleDealReference, IRepository repository)
         {
             try
             {
-                // create column set for possible deal
+                // Create column set for possible deal
                 var columnSetForPossibleDeal = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
-                // get territory reference from possible deal
+                // Get territory reference
                 territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
-                // validate territory reference
+                // Validate territory reference
                 territoryReference = PluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices), nameof(territoryReference));
 
                 return territoryReference;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Error in GetTrritoryReference: {ex.Message}");
+                _log.ERROR($"Error in GetTerritoryReference: {ex.Message}");
                 throw ex;
             }
         }
 
+        /// <summary>
+        /// Получает детали продукта.
+        /// </summary>
+        /// <param name="productReference">Ссылка на продукт.</param>
+        /// <param name="repository">Репозиторий для доступа к данным.</param>
+        /// <returns>Кортеж с идентификаторами формата подготовки, формата проведения и предмета подготовки.</returns>
         private (Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId) GetProductDetailsGuids(EntityReference productReference, IRepository repository)
         {
-            //create column set for product
-            var columnSetForProduct = PluginHelper.CreateColumnSet(Product.Metadata.FormatPreparationReference,
-                                                                   Product.Metadata.FormatConductionReference,
-                                                                   Product.Metadata.SubjectPreparationReference);
-            // get product information
+            // Create column set for product
+            var columnSetForProduct = PluginHelper.CreateColumnSet(
+                Product.Metadata.FormatPreparationReference,
+                Product.Metadata.FormatConductionReference,
+                Product.Metadata.SubjectPreparationReference
+            );
+            // Get product details
             var productEntity = repository.GetEntityDataByReference(productReference, columnSetForProduct).ToEntity<Product>();
-            // validate product information
+
             var formatPreparation = productEntity.FormatPreparationReference;
             var formatConducting = productEntity.FormatConductionReference;
             var subjectPreparation = productEntity.SubjectPreparationReference;
-            PluginHelper.ValidateEntityReferencesWithTuples((formatPreparation, nameof(CalculatePrices), nameof(formatPreparation)),
-                                                            (formatConducting, nameof(CalculatePrices), nameof(formatConducting)),
-                                                            (subjectPreparation, nameof(CalculatePrices), nameof(subjectPreparation)));
+            // Validate product details
+            PluginHelper.ValidateEntityReferencesWithTuples(
+                (formatPreparation, nameof(CalculatePrices), nameof(formatPreparation)),
+                (formatConducting, nameof(CalculatePrices), nameof(formatConducting)),
+                (subjectPreparation, nameof(CalculatePrices), nameof(subjectPreparation))
+            );
 
             return (formatPreparation.Id, formatConducting.Id, subjectPreparation.Id);
         }
 
+        /// <summary>
+        /// Получает базовую цену из прайс-листа.
+        /// </summary>
+        /// <param name="territoryId">Идентификатор территории.</param>
+        /// <param name="formatPreparationId">Идентификатор формата подготовки.</param>
+        /// <param name="formatConductingId">Идентификатор формата проведения.</param>
+        /// <param name="subjectPreparationId">Идентификатор предмета подготовки.</param>
+        /// <param name="repository">Репозиторий для доступа к данным.</param>
+        /// <returns>Базовая цена.</returns>
+        private Money GetBasePrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId, IRepository repository)
+        {
+            var result = repository.GetPrice(territoryId, formatPreparationId, formatConductingId, subjectPreparationId).Entities.FirstOrDefault().ToEntity<PriceListPositions>();
+            if (result == null)
+            {
+                _log.ERROR($"Error in customStep {nameof(CalculatePrices)}: no data in price-list");
+                throw new InvalidPluginExecutionException("no data in price-list");
+            }
+            _log.INFO($"Base price received {result.Price.Value}");
+            return result.Price;
+        }
 
+        /// <summary>
+        /// Рассчитывает цену со скидкой.
+        /// </summary>
+        /// <param name="basePrice">Базовая цена.</param>
+        /// <param name="discount">Скидка.</param>
+        /// <returns>Цена со скидкой.</returns>
+        private Money CalculateDiscountedPrice(Money basePrice, Money discount)
+        {
+            var discountedPrice = new Money(basePrice.Value - discount.Value);
+            _log.INFO($"Discounted price received {discountedPrice.Value}");
+            return discountedPrice;
+        }
+
+        /// <summary>
+        /// Устанавливает базовую цену и цену со скидкой в выходные параметры.
+        /// </summary>
+        /// <param name="basePrice">Базовая цена.</param>
+        /// <param name="discountedPrice">Цена со скидкой.</param>
+        /// <param name="context">Контекст выполнения.</param>
+        private void SetPricesToOutputParameters(Money basePrice, Money discountedPrice, NativeActivityContext context)
+        {
+            BasePrice.Set(context, basePrice);
+            DiscountedPrice.Set(context, discountedPrice);
+            _log.INFO($"BasePrice {BasePrice.Get(context)?.Value}, DiscountedPrice {DiscountedPrice.Get(context)?.Value}");
+        }
     }
 }
-
-
-
-
-
-
