@@ -21,7 +21,19 @@ namespace AwaraIT.Training.Domain.Repositories
             _service = service;
             _log = new Logger(service);
         }
+        public Guid Create(Entity entity)
+        {
+            try
+            {
+                return _service.Create(entity);
+            }
+            catch (Exception ex)
+            {
 
+                _log.ERROR($"Error ocured in {nameof(Create)}: {ex.Message}");
+                throw ex;
+            }
+        }
         public Entity GetEntityDataByReference(EntityReference entityReference, ColumnSet columnSet)
         {
             try

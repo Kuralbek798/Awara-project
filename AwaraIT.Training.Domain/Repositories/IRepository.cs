@@ -10,5 +10,6 @@ namespace AwaraIT.Training.Domain.Repositories
     {
         Entity GetEntityDataByReference(EntityReference entityReference, ColumnSet columnSet);
         EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId);
+        Guid Create(Entity entity);
     }
 }

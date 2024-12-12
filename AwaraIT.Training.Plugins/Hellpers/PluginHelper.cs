@@ -20,7 +20,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 {
     public static class PluginHelper
     {
-        private static Logger _log;
+
 
         /// <summary>
         /// Получает сущность с наименьшей нагрузкой на основе заданных условий.
@@ -36,11 +36,12 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             List<ConditionExpression> conditionExpressions,
             string entityLogicalName,
             string ownerAttributeName,
-            Logger log)
+            Logger logger)
         {
+            Logger log = logger;
             try
             {
-                _log = log;
+
 
                 // Создаем запрос
                 var loadQuery = new QueryExpression(entityLogicalName)
@@ -60,7 +61,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 
                 if (!entityRecords.Any())
                 {
-                    _log.WARNING("No records found matching the specified conditions.");
+                    log.WARNING("No records found matching the specified conditions.");
                     return new Entity();
                 }
                 // Считаем количество записей для каждого пользователя
@@ -73,7 +74,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                     }
                     else
                     {
-                        _log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
+                        log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
                         return Guid.Empty;
                     }
                 })
@@ -81,7 +82,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                     .ToDictionary(g => g.Key, g => g.Count());
                 if (!userLoadCounts.Any())
                 {
-                    _log.WARNING("No users found with the specified conditions.");
+                    log.WARNING("No users found with the specified conditions.");
                     return new Entity();
                 }
 
@@ -90,14 +91,14 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                     .OrderBy(entry => entry.Value)
                     .FirstOrDefault().Key;
 
-                _log.INFO($"Less loaded user ID: {leastLoadedUserId}");
+                log.INFO($"Less loaded user ID: {leastLoadedUserId}");
 
                 return new Entity(User.EntityLogicalName, leastLoadedUserId); // Возвращаем пользователя с наименьшей нагрузкой
 
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}, {ex}");
+                log.ERROR($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}, {ex}");
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetLeastLoadedEntity)} method of PluginHelper.", ex);
             }
         }
@@ -124,25 +125,26 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 
         }
 
-        public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName)
+        public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName, Logger logger)
         {
+            Logger log = logger;
             try
             {
                 if (entityReference == null)
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
                 }
 
                 if (entityReference.Id == Guid.Empty)
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
                 }
 
                 if (string.IsNullOrWhiteSpace(entityReference.LogicalName))
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
                 }
 
@@ -150,14 +152,15 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Exception in plugin {pluginName} in {parameterName}: {ex.Message}");
+                log.ERROR($"Exception in plugin {pluginName} in {parameterName}: {ex.Message}");
                 throw new Exception($"Exception in plugin {pluginName} in {parameterName}", ex);
             }
         }
 
         // Method for validating multiple entityReferences with tuples in parallel
-        public static void ValidateEntityReferencesWithTuples(params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
+        public static void ValidateEntityReferencesWithTuples(Logger logger, params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
         {
+
             var exceptions = new ConcurrentBag<Exception>();
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
@@ -165,7 +168,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             {
                 try
                 {
-                    ValidateEntityReference(attribute.entityReference, attribute.pluginName, attribute.parameterName);
+                    ValidateEntityReference(attribute.entityReference, attribute.pluginName, attribute.parameterName, logger);
                 }
                 catch (Exception ex)
                 {

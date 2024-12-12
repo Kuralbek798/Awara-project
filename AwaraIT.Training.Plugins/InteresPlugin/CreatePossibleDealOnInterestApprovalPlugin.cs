@@ -13,6 +13,8 @@ using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
 using static AwaraIT.Training.Domain.Models.Crm.Entities.PossibleDeal;
 using AwaraIT.Training.Domain.Extensions;
 using System.IdentityModel.Protocols.WSTrust;
+using AwaraIT.Kuralbek.Plugins.Helpers;
+using AwaraIT.Training.Domain.Repositories;
 
 namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 {
@@ -39,9 +41,9 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         /// <exception cref="Exception">Выбрасывается при возникновении ошибки во время выполнения плагина.</exception>
         public void CreatePossibleDeal(IContextWrapper wrapper)
         {
-            var loggerArg = wrapper.Service;
-            _log = new Logger(loggerArg);
-
+            var service = wrapper.Service;
+            _log = new Logger(service);
+            IRepository repository = new Repository(service);
             var interest = wrapper.PreImage.ToEntity<Interest>();
             var target = wrapper.TargetEntity.ToEntity<Interest>();
 
@@ -57,37 +59,10 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 {
                     var contactReference = interest.ContactReference;
                     var territoryReference = interest.TerritoryReference;
+                    PluginHelper.ValidateEntityReferencesWithTuples(_log, (contactReference, nameof(CreatePossibleDealOnInterestApprovalPlugin), nameof(contactReference)),
+                                                                         (territoryReference, nameof(CreatePossibleDealOnInterestApprovalPlugin), nameof(territoryReference)));
 
-                    if (contactReference != null)
-                    {
-                        _log.INFO($"Contact Reference ID: {contactReference.Id}");
-                    }
-                    else
-                    {
-                        _log.ERROR("Contact Reference is Null.");
-                        throw new Exception("contactReference is null");
-                    }
-
-                    if (territoryReference != null)
-                    {
-                        _log.INFO($"Territory Reference ID: {territoryReference.Id}");
-                    }
-                    else
-                    {
-                        _log.ERROR("Territory Reference is Null.");
-                        throw new Exception("territoryReference is null");
-                    }
-
-                    // Создание новой записи в сущности "Возможная сделка"
-                    var possibleDealEntity = new Entity(PossibleDeal.EntityLogicalName)
-                    {
-                        [PossibleDeal.Metadata.ContactReference] = contactReference,
-                        [PossibleDeal.Metadata.Status] = new OptionSetValue(PossibleDealStepStatus.Open.ToIntValue()),
-                        [PossibleDeal.Metadata.TerritoryReference] = territoryReference
-                    };
-
-                    var dealId = wrapper.Service.Create(possibleDealEntity);
-                    _log.INFO($"Created Possible Deal with ID: {dealId}");
+                    CreateNewPossibleDeal(contactReference, territoryReference, repository);
                 }
                 else
                 {
@@ -100,11 +75,33 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(CreatePossibleDeal)} method of {nameof(CreatePossibleDealOnInterestApprovalPlugin)}.", ex);
             }
         }
+
+        /// <summary>
+        /// Создает новую запись "Возможная сделка".
+        /// </summary>
+        /// <param name="contactReference">Ссылка на контакт.</param>
+        /// <param name="territoryReference">Ссылка на территорию.</param>
+        /// <param name="repository">Репозиторий для создания записи.</param>
+        /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время создания записи.</exception>
+        private void CreateNewPossibleDeal(EntityReference contactReference, EntityReference territoryReference, IRepository repository)
+        {
+            try
+            {
+                // Create new possible deal
+                var possibleDealEntity = new Entity(PossibleDeal.EntityLogicalName)
+                {
+                    [PossibleDeal.Metadata.ContactReference] = contactReference,
+                    [PossibleDeal.Metadata.Status] = new OptionSetValue(PossibleDealStepStatus.Open.ToIntValue()),
+                    [PossibleDeal.Metadata.TerritoryReference] = territoryReference
+                };
+                var dealId = repository.Create(possibleDealEntity);
+                _log.INFO($"Created Possible Deal with ID: {dealId}");
+            }
+            catch (Exception ex)
+            {
+                _log.ERROR($"Error in method {nameof(CreateNewPossibleDeal)} of {nameof(CreatePossibleDealOnInterestApprovalPlugin)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(CreateNewPossibleDeal)} method of {nameof(CreatePossibleDealOnInterestApprovalPlugin)}.", ex);
+            }
+        }
     }
 }
-
-
-
-
-
-

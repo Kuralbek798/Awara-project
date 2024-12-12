@@ -77,8 +77,8 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 var productReference = ProductId.Get(context);
                 var discount = Discount.Get(context);
 
-                // Validate input parametera
-                PluginHelper.ValidateEntityReferencesWithTuples(
+                // Validate input parameters
+                PluginHelper.ValidateEntityReferencesWithTuples(_log,
                     (possibleDealReference, nameof(CalculatePrices), nameof(possibleDealReference)),
                     (productReference, nameof(CalculatePrices), nameof(productReference))
                 );
@@ -123,7 +123,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 // Get territory reference
                 territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
                 // Validate territory reference
-                territoryReference = PluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices), nameof(territoryReference));
+                territoryReference = PluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices), nameof(territoryReference), _log);
 
                 return territoryReference;
             }
@@ -155,7 +155,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             var formatConducting = productEntity.FormatConductionReference;
             var subjectPreparation = productEntity.SubjectPreparationReference;
             // Validate product details
-            PluginHelper.ValidateEntityReferencesWithTuples(
+            PluginHelper.ValidateEntityReferencesWithTuples(_log,
                 (formatPreparation, nameof(CalculatePrices), nameof(formatPreparation)),
                 (formatConducting, nameof(CalculatePrices), nameof(formatConducting)),
                 (subjectPreparation, nameof(CalculatePrices), nameof(subjectPreparation))
