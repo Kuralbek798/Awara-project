@@ -111,19 +111,29 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <param name="stepStatus1">Первый статус для фильтрации.</param>
         /// <param name="stepStatus2">Второй статус для фильтрации (необязательный).</param>
         /// <returns>Список условий для фильтрации записей.</returns>
-        public static List<ConditionExpression> SetConditionsExpressions(List<Guid> usersIdList, string statusAttributeName, int stepStatus1, int stepStatus2 = 0)
+        /// 
+
+
+
+
+        //  var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdArray, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
+
+        //  var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
+        public static List<ConditionExpression> SetConditionsExpressions(Guid[] usersIdArray, string statusAttributeName, int stepStatus1, int stepStatus2 = 0)
         {
 
 
             var conditions = new List<ConditionExpression>
-               {
-               new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersIdList.ToArray()),
-               new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1),
-               new ConditionExpression(statusAttributeName, ConditionOperator.NotEqual, InterestStepStatus.Agreement.ToIntValue())
-                };
+                   {
+                   new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersIdArray),
+                   new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1),
+                   new ConditionExpression(statusAttributeName, ConditionOperator.NotEqual, InterestStepStatus.Agreement.ToIntValue())
+                    };
             return conditions;
 
         }
+
+
 
         public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName, Logger logger)
         {

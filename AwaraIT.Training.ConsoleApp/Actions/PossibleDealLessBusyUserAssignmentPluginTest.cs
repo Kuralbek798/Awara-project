@@ -1,4 +1,4 @@
-﻿using AwaraIT.Kuralbek.Plugins.Helpers;
+﻿/*using AwaraIT.Kuralbek.Plugins.Helpers;
 using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Training.Domain.Models.Crm;
@@ -169,3 +169,4 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
 
     }
 }
+*/

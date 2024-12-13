@@ -76,7 +76,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 var discount = new Money(33);
 
                 // Validate input parametera
-                PluginHelper.ValidateEntityReferencesWithTuples(
+                ConsolePluginHelper.ValidateEntityReferencesWithTuples(
                     (possibleDealReference, nameof(CalculatePrices2), nameof(possibleDealReference)),
                     (productReference, nameof(CalculatePrices2), nameof(productReference))
                 );
@@ -116,11 +116,11 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             try
             {
                 // Create column set for possible deal
-                var columnSetForPossibleDeal = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
+                var columnSetForPossibleDeal = ConsolePluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
                 // Get territory reference
                 territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
                 // Validate territory reference
-                territoryReference = PluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices2), nameof(territoryReference));
+                territoryReference = ConsolePluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices2), nameof(territoryReference));
 
                 return territoryReference;
             }
@@ -140,7 +140,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         private (Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId) GetProductDetailsGuids(EntityReference productReference, IRepository repository)
         {
             // Create column set for product
-            var columnSetForProduct = PluginHelper.CreateColumnSet(
+            var columnSetForProduct = ConsolePluginHelper.CreateColumnSet(
                 Product.Metadata.FormatPreparationReference,
                 Product.Metadata.FormatConductionReference,
                 Product.Metadata.SubjectPreparationReference
@@ -152,7 +152,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             var formatConducting = productEntity.FormatConductionReference;
             var subjectPreparation = productEntity.SubjectPreparationReference;
             // Validate product details
-            PluginHelper.ValidateEntityReferencesWithTuples(
+            ConsolePluginHelper.ValidateEntityReferencesWithTuples(
                 (formatPreparation, nameof(CalculatePrices2), nameof(formatPreparation)),
                 (formatConducting, nameof(CalculatePrices2), nameof(formatConducting)),
                 (subjectPreparation, nameof(CalculatePrices2), nameof(subjectPreparation))

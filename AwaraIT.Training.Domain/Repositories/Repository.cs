@@ -46,7 +46,7 @@ namespace AwaraIT.Training.Domain.Repositories
                 throw ex;
             }
         }
-        #region CalculatePrices
+        #region CalculatePrices custom step
         public EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId)
         {
             try

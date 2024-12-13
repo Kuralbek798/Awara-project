@@ -11,10 +11,10 @@ namespace AwaraIT.Kuralbek.Plugins
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            //IntetestPluginAssignmentOnCreationTest.Run();
+            ConsleIntetestPluginAssignmentOnCreation.Run();
             //ProductBasketPriceCalculationPlugin.Run();
             // PossibleDealLessBusyUserAssignmentPluginTest.Run();
-            CalculatePrices2.Run();
+            //CalculatePrices2.Run();
             //PreventDuplicatePriceListPositionsPluginTest.Run();
 
             /*     try

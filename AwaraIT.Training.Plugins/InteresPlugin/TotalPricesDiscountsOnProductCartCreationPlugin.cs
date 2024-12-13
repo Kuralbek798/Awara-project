@@ -8,6 +8,8 @@ using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Enums;
 using AwaraIT.Training.Application.Core;
+using AwaraIT.Training.Domain.Repositories;
+using AwaraIT.Kuralbek.Plugins.Helpers;
 
 namespace AwaraIT.Kuralbek.Plugins.Plugin
 {
@@ -35,7 +37,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         private void Calculate(IContextWrapper wrapper)
         {
             _log = new Logger(wrapper.Service);
-
+            IRepository repository = new Repository(wrapper.Service);
             try
             {
                 var productCart = wrapper?.TargetEntity.ToEntity<ProductCart>();
@@ -47,7 +49,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
                 }
 
 
-                var possibleDealId = GetPossibleDealId(wrapper.Service, productCart.Id);
+                var possibleDealId = GetPossibleDealId(productCart.Id, repository);
 
                 if (possibleDealId == null)
                 {
@@ -100,11 +102,10 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// <param name="service">Сервис организации.</param>
         /// <param name="productCartId">Идентификатор продуктовой корзины.</param>
         /// <returns>Идентификатор возможной сделки.</returns>
-        private Guid? GetPossibleDealId(IOrganizationService service, Guid productCartId)
+        private Guid? GetPossibleDealId(Guid productCartId, IRepository repository)
         {
-
-            var productCart = service.Retrieve(ProductCart.EntityLogicalName, productCartId,
-                                               new ColumnSet(ProductCart.Metadata.PossibleDealReference)).ToEntity<ProductCart>();
+            var columnSet = PluginHelper.CreateColumnSet(ProductCart.Metadata.PossibleDealReference);
+            var productCart = repository.GetEntityDataByReference(new EntityReference(ProductCart.EntityLogicalName, productCartId), columnSet).ToEntity<ProductCart>();
 
             if (productCart != null && productCart.Contains(ProductCart.Metadata.PossibleDealReference))
             {

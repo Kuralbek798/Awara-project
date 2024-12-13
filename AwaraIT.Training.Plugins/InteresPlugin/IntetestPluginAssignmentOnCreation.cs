@@ -54,11 +54,11 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         var contact = FindOrCreateContact(wrapper, interest);
                         interest.ContactReference = contact.ToEntityReference();
 
-                        var usersIdList = GetUserIdListByTeamName(wrapper.Service);
-                        _log.INFO($"participant's of team received: {usersIdList.Count}");
+                        var usersIdArray = GetUserIdArrayByTeamName(wrapper.Service);
+                        _log.INFO($"participant's of team received: {usersIdArray.Length}");
 
                         // Условия для поиска записей
-                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdList, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
+                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdArray, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
                         // Получаем наименее загруженного пользователя для сущности Interest
                         var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
 
@@ -141,12 +141,12 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         }
 
         /// <summary>
-        /// Получает список идентификаторов пользователей, которые принадлежат определенной команде.
+        /// Получает массив идентификаторов пользователей, которые принадлежат определенной команде.
         /// </summary>
         /// <param name="service">Экземпляр IOrganizationService, используемый для выполнения запроса.</param>
-        /// <returns>Список GUID, представляющих идентификаторы пользователей, которые принадлежат указанной команде.</returns>
+        /// <returns>Массив GUID, представляющих идентификаторы пользователей, которые принадлежат указанной команде.</returns>
         /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
-        private List<Guid> GetUserIdListByTeamName(IOrganizationService service)
+        private Guid[] GetUserIdArrayByTeamName(IOrganizationService service)
         {
             try
             {
@@ -176,14 +176,14 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 };
 
                 // Выполняем запрос и получаем сущности пользователей извлекаем идентификаторы пользователей из полученных сущностей
-                var userIds = service.RetrieveMultiple(userQuery).Entities.Select(e => e.ToEntity<User>().SystemUserId).ToList();
+                var userIds = service.RetrieveMultiple(userQuery).Entities.Select(e => e.ToEntity<User>().SystemUserId).ToArray();
 
                 return userIds;
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Error in method {nameof(GetUserIdListByTeamName)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
-                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUserIdListByTeamName)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
+                _log.ERROR($"Error in method {nameof(GetUserIdArrayByTeamName)} of {nameof(IntetestPluginAssignmentOnCreation)}: {ex.Message}, {ex}");
+                throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetUserIdArrayByTeamName)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
             }
         }
     }

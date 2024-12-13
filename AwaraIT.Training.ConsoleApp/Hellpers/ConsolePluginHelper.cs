@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace AwaraIT.Kuralbek.Plugins.Helpers
 {
-    public static class PluginHelper
+    public static class ConsolePluginHelper
     {
         private static Logger _log;
 
@@ -102,15 +102,14 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <param name="stepStatus1">Первый статус для фильтрации.</param>
         /// <param name="stepStatus2">Второй статус для фильтрации (необязательный).</param>
         /// <returns>Список условий для фильтрации записей.</returns>
-        public static List<ConditionExpression> SetConditionsExpressions(List<Guid> usersIdList, string statusAttributeName, int stepStatus1, int stepStatus2 = 0)
+        public static List<ConditionExpression> SetConditionsExpressions(params (string firstArg, ConditionOperator seconArg, object thirdArg)[] args)
         {
+            var conditions = new List<ConditionExpression>();
+            foreach (var arg in args)
+            {
+                conditions.Add(new ConditionExpression(arg.firstArg, arg.seconArg, arg.thirdArg));
+            }
 
-
-            var conditions = new List<ConditionExpression>
-               {
-               new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersIdList.ToArray()),
-               new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1)
-                };
             return conditions;
 
         }
@@ -147,6 +146,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         }
 
         // Method for validating multiple entityReferences with tuples in parallel
+        // это экспериментальный метод так как не уверен насколько правильно использовать циклы и параллельные операции в плагинах
         public static void ValidateEntityReferencesWithTuples(params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
         {
             var exceptions = new ConcurrentBag<Exception>();
