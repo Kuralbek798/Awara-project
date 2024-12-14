@@ -39,21 +39,16 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             Logger log = logger;
             try
             {
-                // Создаем запрос
-                var loadQuery = new QueryExpression(entityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(ownerAttributeName),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                    }
-                };
+                /* // Создаем запрос
+                 var loadQuery = new QueryExpression(entityLogicalName);
+                 loadQuery.ColumnSet.AddColumn(ownerAttributeName);
+                 loadQuery.Criteria.FilterOperator = LogicalOperator.And;
 
-                // Добавляем условия в запрос
-                conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
+                 // Добавляем условия в запрос
+                 conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
 
-                // Делаем запрос
-                var entityRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;
+                 // Делаем запрос
+                 var entityRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;*/
 
                 if (!entityRecords.Any())
                 {

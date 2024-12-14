@@ -46,6 +46,16 @@ namespace AwaraIT.Training.Domain.Repositories
                 throw ex;
             }
         }
+
+        public DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, string attributeName, List<ConditionExpression> conditionExpressions)
+        {
+            var loadQuery = new QueryExpression(entityLogicalName);
+            loadQuery.ColumnSet.AddColumn(attributeName);
+            loadQuery.Criteria.FilterOperator = LogicalOperator.And;
+            conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
+
+            return _service.RetrieveMultiple(loadQuery).Entities;
+        }
         #region CalculatePrices custom step
         public EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId)
         {
