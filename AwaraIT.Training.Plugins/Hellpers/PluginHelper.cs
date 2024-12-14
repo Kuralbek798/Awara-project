@@ -15,20 +15,18 @@ using System.Runtime.ExceptionServices;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-
 namespace AwaraIT.Kuralbek.Plugins.Helpers
 {
     public static class PluginHelper
     {
-
-
         /// <summary>
         /// Получает сущность с наименьшей нагрузкой на основе заданных условий.
         /// </summary>
-        /// <param name="wrapper">Экземпляр IOrganizationService для выполнения запроса.</param>
+        /// <param name="wrapper">Экземпляр IContextWrapper для выполнения запроса.</param>
         /// <param name="conditionExpressions">Список условий для фильтрации записей.</param>
         /// <param name="entityLogicalName">Логическое имя сущности для запроса.</param>
         /// <param name="ownerAttributeName">Имя атрибута владельца в сущности.</param>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
         /// <returns>Сущность с наименьшей нагрузкой.</returns>
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения запроса.</exception>
         public static Entity GetLeastLoadedEntity(
@@ -41,8 +39,6 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             Logger log = logger;
             try
             {
-
-
                 // Создаем запрос
                 var loadQuery = new QueryExpression(entityLogicalName)
                 {
@@ -64,6 +60,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                     log.WARNING("No records found matching the specified conditions.");
                     return new Entity();
                 }
+
                 // Считаем количество записей для каждого пользователя
                 var userLoadCounts = entityRecords
                 .GroupBy(rec =>
@@ -78,8 +75,9 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                         return Guid.Empty;
                     }
                 })
-                    .Where(g => g.Key != Guid.Empty)
-                    .ToDictionary(g => g.Key, g => g.Count());
+                .Where(g => g.Key != Guid.Empty)
+                .ToDictionary(g => g.Key, g => g.Count());
+
                 if (!userLoadCounts.Any())
                 {
                     log.WARNING("No users found with the specified conditions.");
@@ -94,7 +92,6 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 log.INFO($"Less loaded user ID: {leastLoadedUserId}");
 
                 return new Entity(User.EntityLogicalName, leastLoadedUserId); // Возвращаем пользователя с наименьшей нагрузкой
-
             }
             catch (Exception ex)
             {
@@ -106,35 +103,35 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <summary>
         /// Устанавливает условия для фильтрации записей на основе списка идентификаторов пользователей и статусов.
         /// </summary>
-        /// <param name="usersIdList">Список идентификаторов пользователей.</param>
-        /// <param name="statusAttributeName">Имя атрибута статуса в сущности.</param>
-        /// <param name="stepStatus1">Первый статус для фильтрации.</param>
-        /// <param name="stepStatus2">Второй статус для фильтрации (необязательный).</param>
+        /// <param name="components">Массив кортежей, содержащих имя столбца, оператор условия и значение.</param>
         /// <returns>Список условий для фильтрации записей.</returns>
-        /// 
-
-
-
-
-        //  var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdArray, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
-
-        //  var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
-        public static List<ConditionExpression> SetConditionsExpressions(Guid[] usersIdArray, string statusAttributeName, int stepStatus1, int stepStatus2 = 0)
+        public static List<ConditionExpression> SetConditionsExpressions(params (string columnName, ConditionOperator conditionOperator, object value)[] components)
         {
+            var conditions = new List<ConditionExpression>();
+            foreach (var component in components)
+            {
+                if (component.value is Guid[] guidArray)
+                {
+                    conditions.Add(new ConditionExpression(component.columnName, component.conditionOperator, guidArray.Cast<object>().ToArray()));
+                }
+                else
+                {
+                    conditions.Add(new ConditionExpression(component.columnName, component.conditionOperator, component.value));
+                }
+            }
 
-
-            var conditions = new List<ConditionExpression>
-                   {
-                   new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersIdArray),
-                   new ConditionExpression(statusAttributeName, ConditionOperator.Equal, stepStatus1),
-                   new ConditionExpression(statusAttributeName, ConditionOperator.NotEqual, InterestStepStatus.Agreement.ToIntValue())
-                    };
             return conditions;
-
         }
 
-
-
+        /// <summary>
+        /// Проверяет корректность EntityReference.
+        /// </summary>
+        /// <param name="entityReference">EntityReference для проверки.</param>
+        /// <param name="pluginName">Имя плагина.</param>
+        /// <param name="parameterName">Имя параметра.</param>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
+        /// <returns>Проверенный EntityReference.</returns>
+        /// <exception cref="ArgumentNullException">Выбрасывается, если EntityReference некорректен.</exception>
         public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName, Logger logger)
         {
             Logger log = logger;
@@ -167,10 +164,14 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             }
         }
 
-        // Method for validating multiple entityReferences with tuples in parallel
+        /// <summary>
+        /// Проверяет корректность нескольких EntityReference с использованием кортежей в параллельном режиме.
+        /// </summary>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
+        /// <param name="entityReferencesAttributesInfo">Массив кортежей, содержащих EntityReference, имя плагина и имя параметра.</param>
+        /// <exception cref="AggregateException">Выбрасывается, если одна или несколько проверок завершились с ошибкой.</exception>
         public static void ValidateEntityReferencesWithTuples(Logger logger, params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
         {
-
             var exceptions = new ConcurrentBag<Exception>();
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
@@ -182,92 +183,24 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 }
                 catch (Exception ex)
                 {
-
                     exceptions.Add(ex);
                 }
-
             });
+
             if (exceptions.Any())
             {
                 throw new AggregateException("Exceptions in ValidateEntityReferencesWithTuples", exceptions);
             }
         }
 
+        /// <summary>
+        /// Создает ColumnSet на основе списка имен атрибутов.
+        /// </summary>
+        /// <param name="attributeNames">Список имен атрибутов.</param>
+        /// <returns>ColumnSet, содержащий указанные атрибуты.</returns>
         public static ColumnSet CreateColumnSet(params string[] attributeNames)
         {
             return new ColumnSet(attributeNames);
         }
     }
 }
-
-
-
-
-
-/*using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
-using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AwaraIT.Training.Application.Core;
-using AwaraIT.Training.Domain.Models.Crm.Entities;
-using AwaraIT.Training.Domain.Models.Crm;
-using static AwaraIT.Training.Domain.Models.Crm.Entities.Interest;
-using AwaraIT.Training.Domain.Extensions;
-using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
-
-namespace AwaraIT.Kuralbek.Plugins.Hellpers
-{
-    public static class PluginHelper
-    {
-        private static Logger _log;
-        public static Entity GetLeastLoadedUser(IContextWrapper wrapper, List<Guid> usersId)
-        {
-            try
-            {
-                var loadQuery = new QueryExpression(Interest.EntityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(EntityCommon.OwnerId),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                        Conditions =
-                        {
-                            new ConditionExpression(EntityCommon.OwnerId, ConditionOperator.In, usersId.ToArray()),
-                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
-                            new ConditionExpression(Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.New.ToIntValue()),
-                        }
-                    },
-
-                };
-
-                // Получаем записи интересов
-                var interestRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;//.Select(e => e.ToEntity<Interest>());
-
-                // Подсчитываем интересы для каждого пользователя
-                var userLoadCounts = interestRecords
-                  .GroupBy(rec => rec.ToEntity<Interest>().OwnerId.ProductCartId)
-                  .ToDictionary(g => g.Key, g => g.Count());
-
-                //Получаем пользователя с наименьшей нагрузкой
-                var leastLoadedUserId = userLoadCounts
-                  .OrderBy(entry => entry.Value)
-                  .FirstOrDefault().Key;
-
-                //  _log.INFO($"{_teamName} {DataForLogs.GetDataStringFromDictionary(userLoadCounts)}");
-                _log.INFO($"Less loaded user ID:{leastLoadedUserId}");
-
-                return new Entity(User.EntityLogicalName, leastLoadedUserId);
-            }
-            catch (Exception ex)
-            {
-                _log.ERROR($"Ошибка в {nameof(GetLeastLoadedUser)} {ex.Message}, {ex}");
-                throw new Exception($"Ошибка в {nameof(GetLeastLoadedUser)}: {ex.Message}", ex);
-            }
-        }
-    }
-}
-*/

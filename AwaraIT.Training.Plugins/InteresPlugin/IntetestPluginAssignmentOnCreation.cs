@@ -58,7 +58,9 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         _log.INFO($"participant's of team received: {usersIdArray.Length}");
 
                         // Условия для поиска записей
-                        var conditionsExpressions = PluginHelper.SetConditionsExpressions(usersIdArray, Interest.Metadata.Status, InterestStepStatus.InProgress.ToIntValue());
+                        var conditionsExpressions = PluginHelper.SetConditionsExpressions((EntityCommon.OwnerId, ConditionOperator.In, (object)usersIdArray),
+                                                                                          (Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
+                                                                                          (Interest.Metadata.Status, ConditionOperator.NotEqual, InterestStepStatus.New.ToIntValue()));
                         // Получаем наименее загруженного пользователя для сущности Interest
                         var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
 
