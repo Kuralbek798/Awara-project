@@ -119,7 +119,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
             try
             {
                 // Create column set for possible deal
-                var columnSetForPossibleDeal = PluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
+                var columnSetForPossibleDeal = PluginHelper.CreateColumnSet(false, PossibleDeal.Metadata.TerritoryReference);
                 // Get territory reference
                 territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
                 // Validate territory reference
@@ -144,6 +144,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         {
             // Create column set for product
             var columnSetForProduct = PluginHelper.CreateColumnSet(
+                false,
                 Product.Metadata.FormatPreparationReference,
                 Product.Metadata.FormatConductionReference,
                 Product.Metadata.SubjectPreparationReference

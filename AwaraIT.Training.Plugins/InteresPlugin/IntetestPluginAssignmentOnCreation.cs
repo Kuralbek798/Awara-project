@@ -15,6 +15,7 @@ using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Kuralbek.Plugins.Hellpers;
 using System.ComponentModel.Design;
 using AwaraIT.Kuralbek.Plugins.Helpers;
+using AwaraIT.Training.Domain.Repositories;
 
 namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 {
@@ -25,9 +26,11 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
     {
         private readonly string _teamName = "fnt___Колл-центр";
         private Logger _log;
+        private IRepository repository;
 
         public IntetestPluginAssignmentOnCreation()
         {
+
             Subscribe
                 .ToMessage(CrmMessage.Create)
                 .ForEntity(Interest.EntityLogicalName)
@@ -42,6 +45,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения плагина.</exception>
         private void Execute(IContextWrapper wrapper)
         {
+            repository = new Repository(wrapper.Service);
             _log = new Logger(wrapper.Service);
             try
             {
@@ -62,7 +66,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                                                                                           (Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
                                                                                           (Interest.Metadata.Status, ConditionOperator.NotEqual, InterestStepStatus.New.ToIntValue()));
                         // Получаем наименее загруженного пользователя для сущности Interest
-                        var responsibleUser = PluginHelper.GetLeastLoadedEntity(wrapper, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
+                        var responsibleUser = MangeWhoNotBusy(repository, conditionsExpressions, EntityCommon.OwnerId);
 
                         //Проверяем, что пользователь найден и его идентификатор не пустой
                         if (responsibleUser is Entity && responsibleUser.Id == Guid.Empty)
@@ -87,6 +91,33 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(Execute)} method of {nameof(IntetestPluginAssignmentOnCreation)}.", ex);
             }
         }
+
+        private Entity MangeWhoNotBusy(IRepository repository, List<ConditionExpression> conditionsExpressions, string attributeName)
+        {
+            var columnSet = PluginHelper.CreateColumnSet(false, attributeName);
+            var entitiesDataCollection = repository.GetInfoOnMultipleRetrive(Interest.EntityLogicalName, columnSet, conditionsExpressions);
+            var entity = PluginHelper.GetLeastLoadedEntity(entitiesDataCollection, attributeName, _log);
+
+            return entity;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Находит или создает контакт на основе предоставленной информации об интересе.

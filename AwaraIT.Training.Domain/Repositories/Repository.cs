@@ -47,15 +47,25 @@ namespace AwaraIT.Training.Domain.Repositories
             }
         }
 
-        public DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, string attributeName, List<ConditionExpression> conditionExpressions)
+        public DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, ColumnSet columnSet, List<ConditionExpression> conditionExpressions)
         {
-            var loadQuery = new QueryExpression(entityLogicalName);
-            loadQuery.ColumnSet.AddColumn(attributeName);
-            loadQuery.Criteria.FilterOperator = LogicalOperator.And;
-            conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
+            try
+            {
+                var loadQuery = new QueryExpression(entityLogicalName);
+                loadQuery.ColumnSet = columnSet;
+                loadQuery.Criteria.FilterOperator = LogicalOperator.And;
+                conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
 
-            return _service.RetrieveMultiple(loadQuery).Entities;
+                return _service.RetrieveMultiple(loadQuery).Entities;
+
+            }
+            catch (Exception ex)
+            {
+                _log.ERROR($"Error ocured in {nameof(GetInfoOnMultipleRetrive)}: {ex.Message}");
+                throw ex;
+            }
         }
+
         #region CalculatePrices custom step
         public EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId)
         {

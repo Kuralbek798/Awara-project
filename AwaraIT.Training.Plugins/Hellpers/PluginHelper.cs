@@ -29,26 +29,12 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <param name="logger">Экземпляр Logger для логирования.</param>
         /// <returns>Сущность с наименьшей нагрузкой.</returns>
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения запроса.</exception>
-        public static Entity GetLeastLoadedEntity(
-            IContextWrapper wrapper,
-            List<ConditionExpression> conditionExpressions,
-            string entityLogicalName,
-            string ownerAttributeName,
-            Logger logger)
+        public static Entity GetLeastLoadedEntity(DataCollection<Entity> entityRecords, string ownerAttributeName, Logger logger)
+
         {
             Logger log = logger;
             try
             {
-                /* // Создаем запрос
-                 var loadQuery = new QueryExpression(entityLogicalName);
-                 loadQuery.ColumnSet.AddColumn(ownerAttributeName);
-                 loadQuery.Criteria.FilterOperator = LogicalOperator.And;
-
-                 // Добавляем условия в запрос
-                 conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
-
-                 // Делаем запрос
-                 var entityRecords = wrapper.Service.RetrieveMultiple(loadQuery).Entities;*/
 
                 if (!entityRecords.Any())
                 {
@@ -116,6 +102,23 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             }
 
             return conditions;
+        }
+
+        /// <summary>
+        /// Создает ColumnSet на основе списка имен атрибутов.
+        /// </summary>
+        /// <param name="attributeNames">Список имен атрибутов.</param>
+        /// <returns>ColumnSet, содержащий указанные атрибуты.</returns>
+        public static ColumnSet CreateColumnSet(bool getAll = false, params string[] attributeNames)
+        {
+            if (getAll)
+            {
+                return new ColumnSet(true);
+            }
+            else
+            {
+                return new ColumnSet(attributeNames);
+            }
         }
 
         /// <summary>
@@ -188,14 +191,6 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             }
         }
 
-        /// <summary>
-        /// Создает ColumnSet на основе списка имен атрибутов.
-        /// </summary>
-        /// <param name="attributeNames">Список имен атрибутов.</param>
-        /// <returns>ColumnSet, содержащий указанные атрибуты.</returns>
-        public static ColumnSet CreateColumnSet(params string[] attributeNames)
-        {
-            return new ColumnSet(attributeNames);
-        }
+
     }
 }

@@ -104,7 +104,7 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
         /// <returns>Идентификатор возможной сделки.</returns>
         private Guid? GetPossibleDealId(Guid productCartId, IRepository repository)
         {
-            var columnSet = PluginHelper.CreateColumnSet(ProductCart.Metadata.PossibleDealReference);
+            var columnSet = PluginHelper.CreateColumnSet(false, ProductCart.Metadata.PossibleDealReference);
             var productCart = repository.GetEntityDataByReference(new EntityReference(ProductCart.EntityLogicalName, productCartId), columnSet).ToEntity<ProductCart>();
 
             if (productCart != null && productCart.Contains(ProductCart.Metadata.PossibleDealReference))

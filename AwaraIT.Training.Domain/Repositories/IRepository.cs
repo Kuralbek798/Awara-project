@@ -11,6 +11,6 @@ namespace AwaraIT.Training.Domain.Repositories
         Entity GetEntityDataByReference(EntityReference entityReference, ColumnSet columnSet);
         EntityCollection GetPrice(Guid territoryId, Guid formatPreparationId, Guid formatConductingId, Guid subjectPreparationId);
         Guid Create(Entity entity);
-        DataCollection<Entity> GetInfoOnMultipleRetrive(string entityName, string attributeName, List<ConditionExpression> conditionExpressions);
+        DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, ColumnSet columnSet, List<ConditionExpression> conditionExpressions);
     }
 }

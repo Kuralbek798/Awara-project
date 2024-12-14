@@ -1,4 +1,4 @@
-﻿using AwaraIT.Kuralbek.Plugins.PluginExtensions.Enums;
+﻿/*using AwaraIT.Kuralbek.Plugins.PluginExtensions.Enums;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions.Interfaces;
 using AwaraIT.Kuralbek.Plugins.PluginExtensions;
 using Microsoft.Xrm.Sdk;
@@ -141,3 +141,4 @@ namespace AwaraIT.Kuralbek.Plugins.Plugin
 
 
 
+*/
