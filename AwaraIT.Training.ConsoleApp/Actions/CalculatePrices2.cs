@@ -1,5 +1,6 @@
 ﻿using AwaraIT.Kuralbek.Plugins.Hellpers;
 using AwaraIT.Kuralbek.Plugins.Helpers;
+using AwaraIT.Training.Application.Core;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
 using AwaraIT.Training.Domain.Repositories;
@@ -43,13 +44,13 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         [Output("DiscountedPrice")]
         public OutArgument<Money> DiscountedPrice { get; set; }
 
-        IOrganizationService _service;
+        static IOrganizationService _service;
 
         public Test(IOrganizationService service)
         {
             _service = service;
         }
-
+        static Logger _log = new Logger(_service);
         protected override void Execute(CodeActivityContext context)
         {
             _context = context;
@@ -77,6 +78,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
 
                 // Validate input parametera
                 ConsolePluginHelper.ValidateEntityReferencesWithTuples(
+                    _log,
                     (possibleDealReference, nameof(CalculatePrices2), nameof(possibleDealReference)),
                     (productReference, nameof(CalculatePrices2), nameof(productReference))
                 );
@@ -116,11 +118,11 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             try
             {
                 // Create column set for possible deal
-                var columnSetForPossibleDeal = ConsolePluginHelper.CreateColumnSet(PossibleDeal.Metadata.TerritoryReference);
+                var columnSetForPossibleDeal = ConsolePluginHelper.CreateColumnSet(false, PossibleDeal.Metadata.TerritoryReference);
                 // Get territory reference
                 territoryReference = repository.GetEntityDataByReference(possibleDealReference, columnSetForPossibleDeal).ToEntity<PossibleDeal>().TerritoryReference;
                 // Validate territory reference
-                territoryReference = ConsolePluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices2), nameof(territoryReference));
+                territoryReference = ConsolePluginHelper.ValidateEntityReference(territoryReference, nameof(CalculatePrices2), nameof(territoryReference), _log);
 
                 return territoryReference;
             }
@@ -141,6 +143,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         {
             // Create column set for product
             var columnSetForProduct = ConsolePluginHelper.CreateColumnSet(
+                false,
                 Product.Metadata.FormatPreparationReference,
                 Product.Metadata.FormatConductionReference,
                 Product.Metadata.SubjectPreparationReference
@@ -153,6 +156,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             var subjectPreparation = productEntity.SubjectPreparationReference;
             // Validate product details
             ConsolePluginHelper.ValidateEntityReferencesWithTuples(
+                _log,
                 (formatPreparation, nameof(CalculatePrices2), nameof(formatPreparation)),
                 (formatConducting, nameof(CalculatePrices2), nameof(formatConducting)),
                 (subjectPreparation, nameof(CalculatePrices2), nameof(subjectPreparation))

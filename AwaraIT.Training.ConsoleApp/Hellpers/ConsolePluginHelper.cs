@@ -15,66 +15,46 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 {
     public static class ConsolePluginHelper
     {
-        private static Logger _log;
-
         /// <summary>
         /// Получает сущность с наименьшей нагрузкой на основе заданных условий.
         /// </summary>
-        /// <param name="wrapper">Экземпляр IOrganizationService для выполнения запроса.</param>
-        /// <param name="conditionExpressions">Список условий для фильтрации записей.</param>
-        /// <param name="entityLogicalName">Логическое имя сущности для запроса.</param>
+        /// <param name="entityRecords">Коллекция сущностей для анализа.</param>
         /// <param name="ownerAttributeName">Имя атрибута владельца в сущности.</param>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
         /// <returns>Сущность с наименьшей нагрузкой.</returns>
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения запроса.</exception>
-        public static Entity GetLeastLoadedEntity(IOrganizationService wrapper, List<ConditionExpression> conditionExpressions, string entityLogicalName, string ownerAttributeName, Logger log)
+        public static Entity GetLeastLoadedEntity(DataCollection<Entity> entityRecords, string ownerAttributeName, Logger logger)
         {
+            Logger log = logger;
             try
             {
-                _log = log;
-
-                // Создаем запрос
-                var loadQuery = new QueryExpression(entityLogicalName)
-                {
-                    ColumnSet = new ColumnSet(ownerAttributeName),
-                    Criteria = new FilterExpression
-                    {
-                        FilterOperator = LogicalOperator.And,
-                    }
-                };
-
-                // Добавляем условия в запрос
-                conditionExpressions.ForEach(condition => loadQuery.Criteria.AddCondition(condition));
-
-
-
-                // Делаем запрос
-                var entityRecords = wrapper.RetrieveMultiple(loadQuery).Entities;
-
                 if (!entityRecords.Any())
                 {
-                    _log.WARNING("No records found matching the specified conditions.");
-                    return null;
+                    log.WARNING("No records found matching the specified conditions.");
+                    return new Entity();
                 }
+
                 // Считаем количество записей для каждого пользователя
                 var userLoadCounts = entityRecords
-                .GroupBy(rec =>
-                 {
-                     if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
-                     {
-                         return ownerRef.Id;
-                     }
-                     else
-                     {
-                         _log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
-                         return Guid.Empty;
-                     }
-                 })
+                    .GroupBy(rec =>
+                    {
+                        if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
+                        {
+                            return ownerRef.Id;
+                        }
+                        else
+                        {
+                            log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
+                            return Guid.Empty;
+                        }
+                    })
                     .Where(g => g.Key != Guid.Empty)
                     .ToDictionary(g => g.Key, g => g.Count());
+
                 if (!userLoadCounts.Any())
                 {
-                    _log.WARNING("No users found with the specified conditions.");
-                    return null;
+                    log.WARNING("No users found with the specified conditions.");
+                    return new Entity();
                 }
 
                 // Вычисляем пользователя с наименьшей нагрузкой
@@ -82,14 +62,13 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                     .OrderBy(entry => entry.Value)
                     .FirstOrDefault().Key;
 
-                _log.INFO($"Less loaded user ID: {leastLoadedUserId}");
+                log.INFO($"Less loaded user ID: {leastLoadedUserId}");
 
                 return new Entity(User.EntityLogicalName, leastLoadedUserId); // Возвращаем пользователя с наименьшей нагрузкой
-
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}, {ex}");
+                log.ERROR($"Error in {nameof(GetLeastLoadedEntity)}: {ex.Message}, {ex}");
                 throw new InvalidPluginExecutionException($"An error occurred in the {nameof(GetLeastLoadedEntity)} method of PluginHelper.", ex);
             }
         }
@@ -97,42 +76,73 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <summary>
         /// Устанавливает условия для фильтрации записей на основе списка идентификаторов пользователей и статусов.
         /// </summary>
-        /// <param name="usersIdList">Список идентификаторов пользователей.</param>
-        /// <param name="statusAttributeName">Имя атрибута статуса в сущности.</param>
-        /// <param name="stepStatus1">Первый статус для фильтрации.</param>
-        /// <param name="stepStatus2">Второй статус для фильтрации (необязательный).</param>
+        /// <param name="components">Массив кортежей, содержащих имя столбца, оператор условия и значение.</param>
         /// <returns>Список условий для фильтрации записей.</returns>
-        public static List<ConditionExpression> SetConditionsExpressions(params (string firstArg, ConditionOperator seconArg, object thirdArg)[] args)
+        public static List<ConditionExpression> SetConditionsExpressions(params (string columnName, ConditionOperator conditionOperator, object value)[] components)
         {
             var conditions = new List<ConditionExpression>();
-            foreach (var arg in args)
+            foreach (var component in components)
             {
-                conditions.Add(new ConditionExpression(arg.firstArg, arg.seconArg, arg.thirdArg));
+                if (component.value is Guid[] guidArray)
+                {
+                    conditions.Add(new ConditionExpression(component.columnName, component.conditionOperator, guidArray.Cast<object>().ToArray()));
+                }
+                else
+                {
+                    conditions.Add(new ConditionExpression(component.columnName, component.conditionOperator, component.value));
+                }
             }
 
             return conditions;
-
         }
 
-        public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName)
+        /// <summary>
+        /// Создает ColumnSet на основе списка имен атрибутов.
+        /// </summary>
+        /// <param name="getAll">Флаг для выбора всех столбцов.</param>
+        /// <param name="attributeNames">Список имен атрибутов.</param>
+        /// <returns>ColumnSet, содержащий указанные атрибуты.</returns>
+        public static ColumnSet CreateColumnSet(bool getAll = false, params string[] attributeNames)
         {
+            if (getAll)
+            {
+                return new ColumnSet(true);
+            }
+            else
+            {
+                return new ColumnSet(attributeNames);
+            }
+        }
+
+        /// <summary>
+        /// Проверяет корректность EntityReference.
+        /// </summary>
+        /// <param name="entityReference">EntityReference для проверки.</param>
+        /// <param name="pluginName">Имя плагина.</param>
+        /// <param name="parameterName">Имя параметра.</param>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
+        /// <returns>Проверенный EntityReference.</returns>
+        /// <exception cref="ArgumentNullException">Выбрасывается, если EntityReference некорректен.</exception>
+        public static EntityReference ValidateEntityReference(EntityReference entityReference, string pluginName, string parameterName, Logger logger)
+        {
+            Logger log = logger;
             try
             {
                 if (entityReference == null)
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} EntityReference is Null!");
                 }
 
                 if (entityReference.Id == Guid.Empty)
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.Id is Empty!");
                 }
 
                 if (string.IsNullOrWhiteSpace(entityReference.LogicalName))
                 {
-                    _log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
+                    log.ERROR($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
                     throw new ArgumentNullException($" Exception in plugin {pluginName} in {parameterName} entityReference.LogicalName is Null or Empty!");
                 }
 
@@ -140,14 +150,18 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             }
             catch (Exception ex)
             {
-                _log.ERROR($"Exception in plugin {pluginName} in {parameterName}: {ex.Message}");
+                log.ERROR($"Exception in plugin {pluginName} in {parameterName}: {ex.Message}");
                 throw new Exception($"Exception in plugin {pluginName} in {parameterName}", ex);
             }
         }
 
-        // Method for validating multiple entityReferences with tuples in parallel
-        // это экспериментальный метод так как не уверен насколько правильно использовать циклы и параллельные операции в плагинах
-        public static void ValidateEntityReferencesWithTuples(params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
+        /// <summary>
+        /// Проверяет корректность нескольких EntityReference с использованием кортежей в параллельном режиме.
+        /// </summary>
+        /// <param name="logger">Экземпляр Logger для логирования.</param>
+        /// <param name="entityReferencesAttributesInfo">Массив кортежей, содержащих EntityReference, имя плагина и имя параметра.</param>
+        /// <exception cref="AggregateException">Выбрасывается, если одна или несколько проверок завершились с ошибкой.</exception>
+        public static void ValidateEntityReferencesWithTuples(Logger logger, params (EntityReference entityReference, string pluginName, string parameterName)[] entityReferencesAttributesInfo)
         {
             var exceptions = new ConcurrentBag<Exception>();
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
@@ -156,24 +170,18 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
             {
                 try
                 {
-                    ValidateEntityReference(attribute.entityReference, attribute.pluginName, attribute.parameterName);
+                    ValidateEntityReference(attribute.entityReference, attribute.pluginName, attribute.parameterName, logger);
                 }
                 catch (Exception ex)
                 {
-
                     exceptions.Add(ex);
                 }
-
             });
+
             if (exceptions.Any())
             {
                 throw new AggregateException("Exceptions in ValidateEntityReferencesWithTuples", exceptions);
             }
-        }
-
-        public static ColumnSet CreateColumnSet(params string[] attributeNames)
-        {
-            return new ColumnSet(attributeNames);
         }
     }
 }

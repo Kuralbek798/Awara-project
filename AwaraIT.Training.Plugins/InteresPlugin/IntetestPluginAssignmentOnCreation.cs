@@ -58,7 +58,7 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
                         var contact = FindOrCreateContact(wrapper, interest);
                         interest.ContactReference = contact.ToEntityReference();
 
-                        var usersIdArray = GetUserIdArrayByTeamName(wrapper.Service);
+                        var usersIdArray = GetUserIdArrayByTeamName(repository);
                         _log.INFO($"participant's of team received: {usersIdArray.Length}");
 
                         // Условия для поиска записей
@@ -100,24 +100,6 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
 
             return entity;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         /// <summary>
         /// Находит или создает контакт на основе предоставленной информации об интересе.
@@ -179,39 +161,32 @@ namespace AwaraIT.Kuralbek.Plugins.InteresPlugin
         /// <param name="service">Экземпляр IOrganizationService, используемый для выполнения запроса.</param>
         /// <returns>Массив GUID, представляющих идентификаторы пользователей, которые принадлежат указанной команде.</returns>
         /// <exception cref="Exception">Выбрасывается, когда происходит ошибка во время выполнения запроса.</exception>
-        private Guid[] GetUserIdArrayByTeamName(IOrganizationService service)
+        private Guid[] GetUserIdArrayByTeamName(IRepository repository)
         {
             try
             {
                 // Создаем запрос для получения пользователей, связанных с указанной командой
-                var userQuery = new QueryExpression(User.EntityLogicalName)
+                var columnset = PluginHelper.CreateColumnSet(false, User.Metadata.SystemUserId);
+                var linkEntity = new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
                 {
-                    ColumnSet = new ColumnSet(User.Metadata.SystemUserId), // Указываем столбцы для получения
                     LinkEntities =
                     {
-                        new LinkEntity(User.EntityLogicalName, TeammembershipNN.EntityLogicalName, User.Metadata.SystemUserId, TeammembershipNN.Metadata.SystemUserId, JoinOperator.Inner)
-                        {
-                            LinkEntities =
-                            {
-                                new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, TeammembershipNN.Metadata.TeamId, Team.Metadata.TeamId, JoinOperator.Inner)
-                                {
-                                    LinkCriteria = new FilterExpression
-                                    {
-                                        Conditions =
-                                        {
-                                            new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName) // Фильтрация по имени команды
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                       new LinkEntity(TeammembershipNN.EntityLogicalName, Team.EntityLogicalName, TeammembershipNN.Metadata.TeamId, Team.Metadata.TeamId, JoinOperator.Inner)
+                       {
+                         LinkCriteria = new FilterExpression
+                         {
+                           Conditions =
+                           {
+                             new ConditionExpression(Team.Metadata.Name, ConditionOperator.Equal, _teamName)
+                           }
+                         }
+                       }
                     }
                 };
 
-                // Выполняем запрос и получаем сущности пользователей извлекаем идентификаторы пользователей из полученных сущностей
-                var userIds = service.RetrieveMultiple(userQuery).Entities.Select(e => e.ToEntity<User>().SystemUserId).ToArray();
+                var userIds = repository.GetInfoOnMultipleRetrive(User.EntityLogicalName, columnset, null, linkEntity);
 
-                return userIds;
+                return userIds.Select(e => e.ToEntity<User>().SystemUserId).ToArray();
             }
             catch (Exception ex)
             {

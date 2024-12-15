@@ -22,20 +22,16 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <summary>
         /// Получает сущность с наименьшей нагрузкой на основе заданных условий.
         /// </summary>
-        /// <param name="wrapper">Экземпляр IContextWrapper для выполнения запроса.</param>
-        /// <param name="conditionExpressions">Список условий для фильтрации записей.</param>
-        /// <param name="entityLogicalName">Логическое имя сущности для запроса.</param>
+        /// <param name="entityRecords">Коллекция сущностей для анализа.</param>
         /// <param name="ownerAttributeName">Имя атрибута владельца в сущности.</param>
         /// <param name="logger">Экземпляр Logger для логирования.</param>
         /// <returns>Сущность с наименьшей нагрузкой.</returns>
         /// <exception cref="InvalidPluginExecutionException">Выбрасывается при возникновении ошибки во время выполнения запроса.</exception>
         public static Entity GetLeastLoadedEntity(DataCollection<Entity> entityRecords, string ownerAttributeName, Logger logger)
-
         {
             Logger log = logger;
             try
             {
-
                 if (!entityRecords.Any())
                 {
                     log.WARNING("No records found matching the specified conditions.");
@@ -44,20 +40,20 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
 
                 // Считаем количество записей для каждого пользователя
                 var userLoadCounts = entityRecords
-                .GroupBy(rec =>
-                {
-                    if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
+                    .GroupBy(rec =>
                     {
-                        return ownerRef.Id;
-                    }
-                    else
-                    {
-                        log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
-                        return Guid.Empty;
-                    }
-                })
-                .Where(g => g.Key != Guid.Empty)
-                .ToDictionary(g => g.Key, g => g.Count());
+                        if (rec.Contains(ownerAttributeName) && rec[ownerAttributeName] is EntityReference ownerRef)
+                        {
+                            return ownerRef.Id;
+                        }
+                        else
+                        {
+                            log.ERROR($"Record does not contain a valid {ownerAttributeName} attribute or it is not of type EntityReference.");
+                            return Guid.Empty;
+                        }
+                    })
+                    .Where(g => g.Key != Guid.Empty)
+                    .ToDictionary(g => g.Key, g => g.Count());
 
                 if (!userLoadCounts.Any())
                 {
@@ -107,6 +103,7 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
         /// <summary>
         /// Создает ColumnSet на основе списка имен атрибутов.
         /// </summary>
+        /// <param name="getAll">Флаг для выбора всех столбцов.</param>
         /// <param name="attributeNames">Список имен атрибутов.</param>
         /// <returns>ColumnSet, содержащий указанные атрибуты.</returns>
         public static ColumnSet CreateColumnSet(bool getAll = false, params string[] attributeNames)
@@ -190,7 +187,6 @@ namespace AwaraIT.Kuralbek.Plugins.Helpers
                 throw new AggregateException("Exceptions in ValidateEntityReferencesWithTuples", exceptions);
             }
         }
-
-
     }
 }
+

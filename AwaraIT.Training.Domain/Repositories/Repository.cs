@@ -47,7 +47,7 @@ namespace AwaraIT.Training.Domain.Repositories
             }
         }
 
-        public DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, ColumnSet columnSet, List<ConditionExpression> conditionExpressions)
+        public DataCollection<Entity> GetInfoOnMultipleRetrive(string entityLogicalName, ColumnSet columnSet, List<ConditionExpression> conditionExpressions = null, LinkEntity linkEntity = null)
         {
             try
             {

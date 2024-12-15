@@ -59,13 +59,7 @@ namespace AwaraIT.Kuralbek.Plugins
             _log = new Logger(_service);
 
 
-
-
-
             GetUsersByTerritoryId(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
-
-
-
 
             //GetTeamsByTerritory(Guid.Parse("4fd197ce-80a6-ef11-8a6a-000d3a5c09a6"));
             // GetTestUsersWithTerritory(_service);

@@ -5,6 +5,7 @@ using AwaraIT.Training.Domain.Extensions;
 using AwaraIT.Training.Domain.Models.Crm;
 using AwaraIT.Training.Domain.Models.Crm.Entities;
 using AwaraIT.Training.Domain.Models.Crm.SystemEntities;
+using AwaraIT.Training.Domain.Repositories;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.PluginTelemetry;
@@ -52,6 +53,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         private readonly IOrganizationService _service;
         private readonly string _teamName;
         private Logger _log;
+        private IRepository repository;
         public TestPluginInterestContact2(IOrganizationService service)
         {
             _teamName = "fnt___Колл-центр";
@@ -66,6 +68,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
         {
 
             _log = new Logger(_service);
+            repository = new Repository(_service);
             try
             {
                 var interest = new Interest
@@ -101,7 +104,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                                                       (Interest.Metadata.Status, ConditionOperator.Equal, InterestStepStatus.InProgress.ToIntValue()),
                                                       (Interest.Metadata.Status, ConditionOperator.NotEqual, InterestStepStatus.New.ToIntValue()));
                         // Получаем наименее загруженного пользователя для сущности Interest
-                        var responsibleUser = ConsolePluginHelper.GetLeastLoadedEntity(_service, conditionsExpressions, Interest.EntityLogicalName, EntityCommon.OwnerId, _log);
+                        var responsibleUser = MangeWhoNotBusy(repository, conditionsExpressions, EntityCommon.OwnerId);
 
                         if (responsibleUser.Id == Guid.Empty)
                         {
@@ -132,6 +135,14 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
                 throw new InvalidPluginExecutionException($"Ошибка в {nameof(Execute)}: {ex.Message}", ex);
             }
 
+        }
+        private Entity MangeWhoNotBusy(IRepository repository, List<ConditionExpression> conditionsExpressions, string attributeName)
+        {
+            var columnSet = ConsolePluginHelper.CreateColumnSet(false, attributeName);
+            var entitiesDataCollection = repository.GetInfoOnMultipleRetrive(Interest.EntityLogicalName, columnSet, conditionsExpressions);
+            var entity = ConsolePluginHelper.GetLeastLoadedEntity(entitiesDataCollection, attributeName, _log);
+
+            return entity;
         }
 
         /// <summary>
