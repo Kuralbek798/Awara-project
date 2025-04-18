@@ -58,7 +58,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
             /*   var workflowContext = context.GetExtension<IWorkflowContext>();
                var serviceFactory = context.GetExtension<IOrganizationServiceFactory>();
                var service = serviceFactory.CreateOrganizationService(workflowContext.UserId);*/
-
+            ///
 
             try
             {
@@ -129,7 +129,7 @@ namespace AwaraIT.Kuralbek.Plugins.Actions
 
                 BasePrice.Set(context, basePrice);
                 DiscountedPrice.Set(context, discountedPrice);
-                
+
             }
             catch (Exception ex)
             {
